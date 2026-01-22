@@ -58,6 +58,11 @@ export function normalizeUrl(baseUrl: string, href: string): string | null {
       normalized = normalized.slice(0, -1);
     }
 
+    // 末尾のindex.htmlを除去して正規化
+    if (normalized.endsWith('/index.html')) {
+      normalized = normalized.slice(0, -11);
+    }
+
     return normalized;
   } catch (error) {
     return null;
