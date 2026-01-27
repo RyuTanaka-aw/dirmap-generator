@@ -1,5 +1,20 @@
 import { parseHTML } from 'linkedom';
 
+/**
+ * クロスプラットフォーム対応のBase64エンコード（非ASCII文字対応）
+ */
+function encodeBase64(input: string): string {
+  const encoder = new TextEncoder();
+  const bytes = encoder.encode(input);
+  let binary = '';
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+  return btoa(binary);
+}
+
+const MAX_REDIRECTS = 5;
+
 export interface CrawlOptions {
   url: string;
   maxDepth?: number;
@@ -138,13 +153,13 @@ export async function crawlPage(
   username?: string,
   password?: string
 ): Promise<{ title: string; links: string[] }> {
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'User-Agent': 'SitemapCrawler/1.0'
   };
 
   // Basic認証
   if (username && password) {
-    const credentials = btoa(`${username}:${password}`);
+    const credentials = encodeBase64(`${username}:${password}`);
     headers['Authorization'] = `Basic ${credentials}`;
   }
 
@@ -152,12 +167,49 @@ export async function crawlPage(
   const timeoutId = setTimeout(() => controller.abort(), 10000);
 
   try {
-    const response = await fetch(url, {
-      headers,
-      signal: controller.signal
-    });
+    // リダイレクトを手動追従してAuthorizationヘッダーを維持
+    let currentUrl = url;
+    let response: Response | null = null;
+
+    for (let i = 0; i < MAX_REDIRECTS; i++) {
+      response = await fetch(currentUrl, {
+        headers,
+        signal: controller.signal,
+        redirect: 'manual',
+      });
+
+      // リダイレクト (301, 302, 303, 307, 308)
+      if (response.status >= 300 && response.status < 400) {
+        const location = response.headers.get('Location');
+        if (!location) {
+          throw new Error(`リダイレクト ${response.status} にLocationヘッダーがありません`);
+        }
+
+        const redirectUrl = new URL(location, currentUrl).href;
+
+        // 異なるドメインへのリダイレクト時はAuthorizationヘッダーを削除
+        if (!isSameDomain(currentUrl, redirectUrl)) {
+          delete headers['Authorization'];
+        }
+
+        currentUrl = redirectUrl;
+        continue;
+      }
+
+      break;
+    }
+
+    if (!response) {
+      throw new Error('レスポンスを受信できませんでした');
+    }
 
     if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('認証に失敗しました (HTTP 401)。ユーザー名とパスワードを確認してください。');
+      }
+      if (response.status === 403) {
+        throw new Error('アクセスが拒否されました (HTTP 403)。権限が不足している可能性があります。');
+      }
       throw new Error(`HTTP ${response.status}`);
     }
 
@@ -172,7 +224,8 @@ export async function crawlPage(
     for (const elem of anchorElements) {
       const href = elem.getAttribute('href');
       if (href) {
-        const normalizedUrl = normalizeUrl(url, href);
+        // リダイレクト後の最終URLをベースとして使用
+        const normalizedUrl = normalizeUrl(currentUrl, href);
         if (normalizedUrl) {
           links.push(normalizedUrl);
         }

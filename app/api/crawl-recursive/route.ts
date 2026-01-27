@@ -26,9 +26,13 @@ export async function POST(request: Request) {
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('クロールエラー:', errorMessage);
+
+    const isAuthError = errorMessage.includes('401') || errorMessage.includes('認証に失敗');
     return NextResponse.json({
-      error: 'クロールに失敗しました',
+      error: isAuthError
+        ? 'Basic認証に失敗しました。ユーザー名とパスワードを確認してください。'
+        : 'クロールに失敗しました',
       details: errorMessage
-    }, { status: 500 });
+    }, { status: isAuthError ? 401 : 500 });
   }
 }
