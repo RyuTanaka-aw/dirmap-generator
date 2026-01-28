@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import * as XLSX from 'xlsx';
+import * as XLSX from 'xlsx-js-style';
 
 interface CrawlResult {
   url: string;
@@ -31,6 +31,48 @@ function getDirectorySegmentName(url: string): string {
     return lastSegment + '/';
   } catch {
     return '';
+  }
+}
+
+// 罫線スタイル定義
+const thinBorder = { style: 'thin', color: { rgb: '000000' } };
+const allBorders = {
+  top: thinBorder,
+  bottom: thinBorder,
+  left: thinBorder,
+  right: thinBorder,
+};
+
+const headerStyle = {
+  border: allBorders,
+  font: { bold: true },
+  alignment: { horizontal: 'center', vertical: 'center' },
+};
+
+const dataCellStyle = {
+  border: allBorders,
+};
+
+/**
+ * 指定範囲のセルにスタイルを一括適用する。
+ * セルが存在しない場合は空セルを作成して罫線が描画されるようにする。
+ */
+function applyStyleToRange(
+  ws: XLSX.WorkSheet,
+  startRow: number,
+  startCol: number,
+  endRow: number,
+  endCol: number,
+  style: Record<string, unknown>
+): void {
+  for (let r = startRow; r <= endRow; r++) {
+    for (let c = startCol; c <= endCol; c++) {
+      const cellRef = XLSX.utils.encode_cell({ r, c });
+      if (!ws[cellRef]) {
+        ws[cellRef] = { t: 's', v: '' };
+      }
+      ws[cellRef].s = style;
+    }
   }
 }
 
@@ -152,6 +194,21 @@ export async function POST(request: Request) {
       colWidths.push({ wch: 35 });
     }
     ws['!cols'] = colWidths;
+
+    // 罫線スタイルを適用
+    const totalCols = headers.length;
+    const headerRowIndex = 4; // ヘッダー行（行1:空, 行2:タイトル, 行3:日時, 行4:空, 行5:ヘッダー → 0-indexed: 4）
+    applyStyleToRange(ws, headerRowIndex, 0, headerRowIndex, totalCols - 1, headerStyle);
+
+    const dataStartRow = 5;
+    const dataEndRow = dataStartRow + rows.length - 1;
+    applyStyleToRange(ws, dataStartRow, 0, dataEndRow, totalCols - 1, dataCellStyle);
+
+    // スタイル適用で追加した空セルを含むようにシート範囲を更新
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+    if (range.e.r < dataEndRow) range.e.r = dataEndRow;
+    if (range.e.c < totalCols - 1) range.e.c = totalCols - 1;
+    ws['!ref'] = XLSX.utils.encode_range(range);
 
     // ワークブックを作成
     const wb = XLSX.utils.book_new();

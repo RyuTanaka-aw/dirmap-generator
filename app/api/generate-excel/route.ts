@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import * as XLSX from 'xlsx';
+import * as XLSX from 'xlsx-js-style';
 
 export async function GET() {
   try {
