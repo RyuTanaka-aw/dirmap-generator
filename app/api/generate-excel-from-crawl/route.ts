@@ -12,13 +12,34 @@ interface FlatData {
   level: number;
   url: string;
   title: string;
+  directoryName: string;
+}
+
+/**
+ * URLから最後のパスセグメント名を取得（ディレクトリ列用）
+ * 例: "https://example.com/plan" → "plan/"
+ *     "https://example.com/page.html" → "page.html"
+ *     "https://example.com/" → ""
+ */
+function getDirectorySegmentName(url: string): string {
+  try {
+    const urlObj = new URL(url);
+    const parts = urlObj.pathname.split('/').filter(p => p !== '');
+    if (parts.length === 0) return '';
+    const lastSegment = parts[parts.length - 1];
+    if (lastSegment.includes('.')) return lastSegment;
+    return lastSegment + '/';
+  } catch {
+    return '';
+  }
 }
 
 function flattenCrawlResult(result: CrawlResult, list: FlatData[] = []): FlatData[] {
   list.push({
     level: result.depth,
     url: result.url,
-    title: result.title
+    title: result.title,
+    directoryName: getDirectorySegmentName(result.url)
   });
 
   for (const child of result.children) {
@@ -30,7 +51,7 @@ function flattenCrawlResult(result: CrawlResult, list: FlatData[] = []): FlatDat
 
 export async function POST(request: Request) {
   try {
-    const { crawlResult } = await request.json();
+    const { crawlResult, includeDirectoryColumns = false } = await request.json();
 
     if (!crawlResult) {
       return NextResponse.json({ error: 'クロール結果が必要です' }, { status: 400 });
@@ -47,6 +68,11 @@ export async function POST(request: Request) {
     for (let i = 0; i <= maxLevel; i++) {
       headers.push(i === 0 ? 'contents title' : '');
     }
+    if (includeDirectoryColumns) {
+      for (let i = 0; i <= maxLevel; i++) {
+        headers.push(i === 0 ? 'directory' : '');
+      }
+    }
     headers.push('URL');
 
     // データ行を作成
@@ -56,6 +82,13 @@ export async function POST(request: Request) {
       // 階層レベルに応じた列にタイトルを配置
       for (let i = 0; i <= maxLevel; i++) {
         row.push(i === data.level ? data.title : '');
+      }
+
+      // ディレクトリ列を追加（オプション）
+      if (includeDirectoryColumns) {
+        for (let i = 0; i <= maxLevel; i++) {
+          row.push(i === data.level ? data.directoryName : '');
+        }
       }
 
       row.push(data.url);
@@ -72,6 +105,11 @@ export async function POST(request: Request) {
     ];
     for (let i = 0; i <= maxLevel; i++) {
       colWidths.push({ wch: 25 }); // タイトル列
+    }
+    if (includeDirectoryColumns) {
+      for (let i = 0; i <= maxLevel; i++) {
+        colWidths.push({ wch: 20 }); // ディレクトリ列
+      }
     }
     colWidths.push({ wch: 50 }); // URL列
     ws['!cols'] = colWidths;

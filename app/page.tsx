@@ -16,6 +16,7 @@ export default function Home() {
   const [useAuth, setUseAuth] = useState(false);
   const [maxDepth, setMaxDepth] = useState(2);
   const [excludePatterns, setExcludePatterns] = useState('');
+  const [includeDirectoryColumns, setIncludeDirectoryColumns] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<CrawlResult | null>(null);
   const [error, setError] = useState('');
@@ -67,7 +68,7 @@ export default function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ crawlResult: result }),
+        body: JSON.stringify({ crawlResult: result, includeDirectoryColumns }),
       });
 
       if (!response.ok) {
@@ -243,6 +244,21 @@ export default function Home() {
                 </div>
               </div>
             )}
+
+            <div>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={includeDirectoryColumns}
+                  onChange={(e) => setIncludeDirectoryColumns(e.target.checked)}
+                  className="rounded"
+                />
+                <span className="text-sm font-medium">ディレクトリパス列を追加</span>
+              </label>
+              <p className="text-xs text-gray-500 mt-1 ml-6">
+                各ページのURLパスセグメント名をディレクトリ列に表示します
+              </p>
+            </div>
 
             <button
               onClick={handleCrawl}
