@@ -66,7 +66,11 @@ export async function POST(request: Request) {
     // ヘッダー行を作成
     const headers: string[] = ['No'];
     for (let i = 0; i <= maxLevel; i++) {
-      headers.push(i === 0 ? 'contents title' : '');
+      if (i === 0) {
+        headers.push('トップ');
+      } else {
+        headers.push(`第${i + 1}階層`);
+      }
     }
     if (includeDirectoryColumns) {
       for (let i = 0; i <= maxLevel; i++) {
@@ -95,9 +99,40 @@ export async function POST(request: Request) {
       return row;
     });
 
-    // ワークシートを作成
-    const wsData = [headers, ...rows];
+    // タイトル行・出力日時行を作成
+    const rootTitle = crawlResult.title || '';
+    const titleText = `${rootTitle} ディレクトリマップ`;
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const dateText = `出力日時: ${dateStr}`;
+
+    // タイトル結合範囲: A2からNo列+深度列分（列0〜列maxLevel+1-1）
+    const titleMergeEnd = maxLevel + 1; // 0-indexed: 列0(No)〜列maxLevel+1-1(最後の深度列) → end = maxLevel+1
+    // システム表記の位置: 結合末尾から2列右
+    const systemNoteCol = titleMergeEnd + 2;
+
+    // 行1: 空行, 行2: タイトル+システム表記, 行3: 出力日時(システム表記の下), 行4: 空行
+    const row1: (string | number)[] = [];
+    const row2: (string | number)[] = [titleText];
+    // row2のシステム表記列まで空セルで埋める
+    for (let i = 1; i <= systemNoteCol; i++) {
+      row2.push(i === systemNoteCol ? 'ディレクトリマップ生成ツールで出力しました' : '');
+    }
+    const row3: (string | number)[] = [];
+    // row3の出力日時をシステム表記の下（同じ列）に配置
+    for (let i = 0; i <= systemNoteCol; i++) {
+      row3.push(i === systemNoteCol ? dateText : '');
+    }
+    const row4: (string | number)[] = [];
+
+    // ワークシートを作成（4行のヘッダー + 既存ヘッダー + データ行）
+    const wsData = [row1, row2, row3, row4, headers, ...rows];
     const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // セル結合: A2（行1, 列0）からタイトル列末尾まで結合
+    ws['!merges'] = [
+      { s: { r: 1, c: 0 }, e: { r: 1, c: titleMergeEnd } }
+    ];
 
     // 列幅を設定
     const colWidths: XLSX.ColInfo[] = [
@@ -112,6 +147,10 @@ export async function POST(request: Request) {
       }
     }
     colWidths.push({ wch: 50 }); // URL列
+    // システム表記列がヘッダー列数を超える場合、追加の列幅を設定
+    while (colWidths.length <= systemNoteCol) {
+      colWidths.push({ wch: 35 });
+    }
     ws['!cols'] = colWidths;
 
     // ワークブックを作成
