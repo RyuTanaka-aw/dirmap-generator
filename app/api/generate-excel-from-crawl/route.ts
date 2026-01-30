@@ -121,19 +121,19 @@ export async function POST(request: Request) {
     }
     headers.push('URL');
 
-    // データ行を作成
-    const rows: (string | number)[][] = flatData.map((data, index) => {
-      const row: (string | number)[] = [index + 1];
+    // データ行を作成（空セルはnullで本当の空セルにする）
+    const rows: (string | number | null)[][] = flatData.map((data, index) => {
+      const row: (string | number | null)[] = [index + 1];
 
       // 階層レベルに応じた列にタイトルを配置
       for (let i = 0; i <= maxLevel; i++) {
-        row.push(i === data.level ? data.title : '');
+        row.push(i === data.level ? data.title : null);
       }
 
       // ディレクトリ列を追加（オプション）
       if (includeDirectoryColumns) {
         for (let i = 0; i <= maxLevel; i++) {
-          row.push(i === data.level ? data.directoryName : '');
+          row.push(i === data.level ? data.directoryName : null);
         }
       }
 
@@ -202,7 +202,87 @@ export async function POST(request: Request) {
 
     const dataStartRow = 5;
     const dataEndRow = dataStartRow + rows.length - 1;
-    applyStyleToRange(ws, dataStartRow, 0, dataEndRow, totalCols - 1, dataCellStyle);
+
+    // No列（列0）にのみ罫線スタイルを適用
+    applyStyleToRange(ws, dataStartRow, 0, dataEndRow, 0, dataCellStyle);
+    // 階層列（列1〜maxLevel+1）は後で個別に処理するのでスキップ
+    // ディレクトリ列とURL列に罫線スタイルを適用
+    const afterLevelColStart = maxLevel + 2; // 階層列の次の列
+    if (afterLevelColStart < totalCols) {
+      applyStyleToRange(ws, dataStartRow, afterLevelColStart, dataEndRow, totalCols - 1, dataCellStyle);
+    }
+
+    // 階層列の罫線を調整
+    const levelColStart = 1;             // 列0はNo列、列1〜がトップ/第2階層...
+    const levelColEnd = maxLevel + 1;    // 最後の階層列
+
+    for (let r = dataStartRow; r <= dataEndRow; r++) {
+      // この行の値セルを探す
+      let valueCol = -1;
+      for (let c = levelColStart; c <= levelColEnd; c++) {
+        const cellRef = XLSX.utils.encode_cell({ r, c });
+        const cell = ws[cellRef];
+        if (cell && cell.v != null && cell.v !== '') {
+          valueCol = c;
+          break;
+        }
+      }
+
+      const isLastRow = r === dataEndRow;
+
+      // 値セルの下罫線条件: 次行の同列以下に値があるか
+      let valueNeedsBottom = isLastRow;
+      if (!isLastRow && valueCol >= 0) {
+        for (let c = levelColStart; c <= valueCol; c++) {
+          const nextRowRef = XLSX.utils.encode_cell({ r: r + 1, c });
+          const nextCell = ws[nextRowRef];
+          if (nextCell && nextCell.v != null && nextCell.v !== '') {
+            valueNeedsBottom = true;
+            break;
+          }
+        }
+      }
+
+      for (let c = levelColStart; c <= levelColEnd; c++) {
+        const cellRef = XLSX.utils.encode_cell({ r, c });
+        if (!ws[cellRef]) {
+          ws[cellRef] = { t: 's', v: '' };
+        }
+
+        const cell = ws[cellRef];
+        const hasValue = cell && cell.v != null && cell.v !== '';
+        const isLastLevelCol = c === levelColEnd;
+
+        if (hasValue) {
+          // 値セル: 上・左・右（最深階層列のみ）・下（条件付き）
+          ws[cellRef].s = {
+            border: {
+              top: thinBorder,
+              left: thinBorder,
+              right: isLastLevelCol ? thinBorder : undefined,
+              bottom: valueNeedsBottom ? thinBorder : undefined,
+            },
+          };
+        } else if (valueCol >= 0 && c > valueCol) {
+          // 値セルより右の空セル: 最深階層列のみ右罫線 + 常に下罫線
+          ws[cellRef].s = {
+            border: {
+              right: isLastLevelCol ? thinBorder : undefined,
+              bottom: thinBorder,
+            },
+          };
+        } else {
+          // 値セルより左の空セル: 左右罫線 + 最終行なら下罫線
+          ws[cellRef].s = {
+            border: {
+              left: thinBorder,
+              right: thinBorder,
+              bottom: isLastRow ? thinBorder : undefined,
+            },
+          };
+        }
+      }
+    }
 
     // スタイル適用で追加した空セルを含むようにシート範囲を更新
     const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
