@@ -352,8 +352,8 @@ export async function POST(request: Request) {
                 bottom: valueNeedsBottom ? thinBorder : undefined,
               },
             };
-          } else if (valueCol >= 0 && c > valueCol) {
-            // 値セルより右の空セル: 最深階層列のみ右罫線 + 常に下罫線
+          } else if (valueCol < 0 || c > valueCol) {
+            // 値セルより右の空セル（valueCol < 0の場合は全セルが空なので全て「右」扱い）: 最深階層列のみ右罫線 + 常に下罫線
             ws[cellRef].s = {
               border: {
                 right: isLastDirCol ? thinBorder : undefined,
