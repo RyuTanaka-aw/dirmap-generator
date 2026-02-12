@@ -12,6 +12,7 @@ interface CrawlResult {
 
 export default function Home() {
   const [url, setUrl] = useState('');
+  const [devDomain, setDevDomain] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [useAuth, setUseAuth] = useState(false);
@@ -64,6 +65,16 @@ export default function Home() {
       return;
     }
 
+    // 開発ドメインのバリデーション
+    if (devDomain) {
+      try {
+        new URL(devDomain);
+      } catch {
+        alert('開発環境URLの形式が正しくありません');
+        return;
+      }
+    }
+
     try {
       const response = await fetch('/api/generate-excel-from-crawl', {
         method: 'POST',
@@ -73,7 +84,8 @@ export default function Home() {
         body: JSON.stringify({
           crawlResult: result,
           completedAt,
-          includeDirectoryColumns
+          includeDirectoryColumns,
+          ...(devDomain && { devDomain })
         }),
       });
 
@@ -177,6 +189,22 @@ export default function Home() {
                 placeholder="https://example.com"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                開発環境URL（任意）
+              </label>
+              <input
+                type="text"
+                value={devDomain}
+                onChange={(e) => setDevDomain(e.target.value)}
+                placeholder="https://dev.example.com"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                本番URLと同じパス構造で開発環境URLを生成します
+              </p>
             </div>
 
             <div>

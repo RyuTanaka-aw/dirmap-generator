@@ -12,6 +12,7 @@ interface CrawlResult {
 interface FlatData {
   level: number;
   url: string;
+  devUrl?: string;
   title: string;
   description: string;
   directoryName: string;
@@ -31,6 +32,22 @@ function getDirectorySegmentName(url: string): string {
     const lastSegment = parts[parts.length - 1];
     if (lastSegment.includes('.')) return lastSegment;
     return lastSegment + '/';
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * 本番URLから開発URLを生成
+ * @param prodUrl 本番URL
+ * @param devDomain 開発ドメイン
+ * @returns 開発URL（エラー時は空文字列）
+ */
+function generateDevUrl(prodUrl: string, devDomain: string): string {
+  try {
+    const prodUrlObj = new URL(prodUrl);
+    const devDomainObj = new URL(devDomain);
+    return devDomainObj.origin + prodUrlObj.pathname + prodUrlObj.search + prodUrlObj.hash;
   } catch {
     return '';
   }
@@ -81,21 +98,29 @@ function applyStyleToRange(
 function flattenCrawlResult(
   result: CrawlResult,
   list: FlatData[] = [],
-  skipRoot: boolean = false
+  skipRoot: boolean = false,
+  devDomain?: string
 ): FlatData[] {
   // skipRootがtrueの場合、深度0（ルートノード）を除外
   if (!skipRoot || result.depth > 0) {
-    list.push({
+    const flatItem: FlatData = {
       level: result.depth,
       url: result.url,
       title: result.title,
       description: result.description,
       directoryName: getDirectorySegmentName(result.url)
-    });
+    };
+
+    // 開発ドメインが指定されている場合、開発URLを生成
+    if (devDomain) {
+      flatItem.devUrl = generateDevUrl(result.url, devDomain);
+    }
+
+    list.push(flatItem);
   }
 
   for (const child of result.children) {
-    flattenCrawlResult(child, list, skipRoot);
+    flattenCrawlResult(child, list, skipRoot, devDomain);
   }
 
   return list;
@@ -103,14 +128,14 @@ function flattenCrawlResult(
 
 export async function POST(request: Request) {
   try {
-    const { crawlResult, completedAt, includeDirectoryColumns = false } = await request.json();
+    const { crawlResult, completedAt, includeDirectoryColumns = false, devDomain } = await request.json();
 
     if (!crawlResult) {
       return NextResponse.json({ error: 'クロール結果が必要です' }, { status: 400 });
     }
 
     // ツリー構造をフラットなリストに変換（常にルートノードを含める）
-    const flatData = flattenCrawlResult(crawlResult, [], false);
+    const flatData = flattenCrawlResult(crawlResult, [], false, devDomain);
 
     // 最大レベルを計算
     const maxLevel = Math.max(...flatData.map(d => d.level));
@@ -130,6 +155,9 @@ export async function POST(request: Request) {
       }
     }
     headers.push('URL');
+    if (devDomain) {
+      headers.push('開発URL');
+    }
     headers.push('ディスクリプション');
     headers.push('備考'); // 備考列（ディスクリプションのはみ出し防止も兼ねる）
 
@@ -150,6 +178,9 @@ export async function POST(request: Request) {
       }
 
       row.push(data.url);
+      if (devDomain) {
+        row.push(data.devUrl || null);
+      }
       row.push(data.description);
       row.push(null); // 備考列（初期値は空）
       return row;
@@ -204,6 +235,9 @@ export async function POST(request: Request) {
       }
     }
     colWidths.push({ wch: 50 }); // URL列
+    if (devDomain) {
+      colWidths.push({ wch: 50 }); // 開発URL列
+    }
     colWidths.push({ wch: 60 }); // ディスクリプション列
     colWidths.push({ wch: 20 }); // 備考列
     // システム表記列がヘッダー列数を超える場合、追加の列幅を設定
