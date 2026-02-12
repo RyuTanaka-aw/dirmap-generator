@@ -26,11 +26,13 @@ export interface CrawlOptions {
 export interface PageInfo {
   url: string;
   title: string;
+  description: string;
 }
 
 export interface CrawlResult {
   url: string;
   title: string;
+  description: string;
   depth: number;
   children: CrawlResult[];
 }
@@ -152,7 +154,7 @@ export async function crawlPage(
   url: string,
   username?: string,
   password?: string
-): Promise<{ title: string; links: string[] }> {
+): Promise<{ title: string; description: string; links: string[] }> {
   const headers: Record<string, string> = {
     'User-Agent': 'SitemapCrawler/1.0'
   };
@@ -219,6 +221,12 @@ export async function crawlPage(
     const titleElement = document.querySelector('title');
     const title = titleElement?.textContent?.trim() || 'No Title';
 
+    // Extract meta description
+    const metaDescOG = document.querySelector('meta[property="og:description"]');
+    const metaDescName = document.querySelector('meta[name="description"]');
+    const descContent = metaDescOG?.getAttribute('content') || metaDescName?.getAttribute('content');
+    const description = descContent?.trim() || '';
+
     const links: string[] = [];
     const anchorElements = document.querySelectorAll('a[href]');
     for (const elem of anchorElements) {
@@ -235,7 +243,7 @@ export async function crawlPage(
     // 重複を除去
     const uniqueLinks = Array.from(new Set(links));
 
-    return { title, links: uniqueLinks };
+    return { title, description, links: uniqueLinks };
   } finally {
     clearTimeout(timeoutId);
   }
@@ -289,9 +297,9 @@ export async function crawlSiteFlat(
 
     try {
       console.log(`クロール中: ${currentUrl}`);
-      const { title, links } = await crawlPage(currentUrl, username, password);
+      const { title, description, links } = await crawlPage(currentUrl, username, password);
 
-      pages.set(currentUrl, { url: currentUrl, title });
+      pages.set(currentUrl, { url: currentUrl, title, description });
 
       // 同一ドメインのリンクをキューに追加
       for (const link of links) {
@@ -307,7 +315,7 @@ export async function crawlSiteFlat(
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error(`クロール失敗: ${currentUrl}`, errorMessage);
       // エラーが発生してもページ情報は保存（エラー詳細を含む）
-      pages.set(currentUrl, { url: currentUrl, title: `Error: ${errorMessage}` });
+      pages.set(currentUrl, { url: currentUrl, title: `Error: ${errorMessage}`, description: '' });
     }
   }
 
@@ -438,6 +446,7 @@ export function buildHierarchy(
     nodeMap.set(url, {
       url,
       title: pageInfo.title,
+      description: pageInfo.description,
       depth,
       children: []
     });
@@ -473,6 +482,7 @@ export function buildHierarchy(
       return {
         url: rootUrl,
         title: 'No pages found',
+        description: '',
         depth: 0,
         children: []
       };

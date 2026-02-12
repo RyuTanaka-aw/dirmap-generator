@@ -5,6 +5,7 @@ import { useState } from 'react';
 interface CrawlResult {
   url: string;
   title: string;
+  description: string;
   depth: number;
   children: CrawlResult[];
 }

@@ -4,6 +4,7 @@ import * as XLSX from 'xlsx-js-style';
 interface CrawlResult {
   url: string;
   title: string;
+  description: string;
   depth: number;
   children: CrawlResult[];
 }
@@ -12,6 +13,7 @@ interface FlatData {
   level: number;
   url: string;
   title: string;
+  description: string;
   directoryName: string;
 }
 
@@ -87,6 +89,7 @@ function flattenCrawlResult(
       level: result.depth,
       url: result.url,
       title: result.title,
+      description: result.description,
       directoryName: getDirectorySegmentName(result.url)
     });
   }
@@ -127,6 +130,7 @@ export async function POST(request: Request) {
       }
     }
     headers.push('URL');
+    headers.push('ディスクリプション');
 
     // データ行を作成（空セルはnullで本当の空セルにする）
     const rows: (string | number | null)[][] = flatData.map((data, index) => {
@@ -145,6 +149,7 @@ export async function POST(request: Request) {
       }
 
       row.push(data.url);
+      row.push(data.description);
       return row;
     });
 
@@ -196,6 +201,7 @@ export async function POST(request: Request) {
       }
     }
     colWidths.push({ wch: 50 }); // URL列
+    colWidths.push({ wch: 60 }); // ディスクリプション列
     // システム表記列がヘッダー列数を超える場合、追加の列幅を設定
     while (colWidths.length <= systemNoteCol) {
       colWidths.push({ wch: 35 });
