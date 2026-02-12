@@ -131,6 +131,7 @@ export async function POST(request: Request) {
     }
     headers.push('URL');
     headers.push('ディスクリプション');
+    headers.push('備考'); // 備考列（ディスクリプションのはみ出し防止も兼ねる）
 
     // データ行を作成（空セルはnullで本当の空セルにする）
     const rows: (string | number | null)[][] = flatData.map((data, index) => {
@@ -150,6 +151,7 @@ export async function POST(request: Request) {
 
       row.push(data.url);
       row.push(data.description);
+      row.push(null); // 備考列（初期値は空）
       return row;
     });
 
@@ -203,6 +205,7 @@ export async function POST(request: Request) {
     }
     colWidths.push({ wch: 50 }); // URL列
     colWidths.push({ wch: 60 }); // ディスクリプション列
+    colWidths.push({ wch: 20 }); // 備考列
     // システム表記列がヘッダー列数を超える場合、追加の列幅を設定
     while (colWidths.length <= systemNoteCol) {
       colWidths.push({ wch: 35 });
