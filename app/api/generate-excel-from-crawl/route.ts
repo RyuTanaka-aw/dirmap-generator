@@ -76,16 +76,23 @@ function applyStyleToRange(
   }
 }
 
-function flattenCrawlResult(result: CrawlResult, list: FlatData[] = []): FlatData[] {
-  list.push({
-    level: result.depth,
-    url: result.url,
-    title: result.title,
-    directoryName: getDirectorySegmentName(result.url)
-  });
+function flattenCrawlResult(
+  result: CrawlResult,
+  list: FlatData[] = [],
+  skipRoot: boolean = false
+): FlatData[] {
+  // skipRootがtrueの場合、深度0（ルートノード）を除外
+  if (!skipRoot || result.depth > 0) {
+    list.push({
+      level: result.depth,
+      url: result.url,
+      title: result.title,
+      directoryName: getDirectorySegmentName(result.url)
+    });
+  }
 
   for (const child of result.children) {
-    flattenCrawlResult(child, list);
+    flattenCrawlResult(child, list, skipRoot);
   }
 
   return list;
@@ -99,8 +106,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'クロール結果が必要です' }, { status: 400 });
     }
 
-    // ツリー構造をフラットなリストに変換
-    const flatData = flattenCrawlResult(crawlResult);
+    // ツリー構造をフラットなリストに変換（常にルートノードを含める）
+    const flatData = flattenCrawlResult(crawlResult, [], false);
 
     // 最大レベルを計算
     const maxLevel = Math.max(...flatData.map(d => d.level));
@@ -115,8 +122,8 @@ export async function POST(request: Request) {
       }
     }
     if (includeDirectoryColumns) {
-      for (let i = 0; i <= maxLevel; i++) {
-        headers.push(i === 0 ? 'directory' : '');
+      for (let i = 1; i <= maxLevel; i++) {
+        headers.push(i === 1 ? 'directory' : '');
       }
     }
     headers.push('URL');
@@ -132,7 +139,7 @@ export async function POST(request: Request) {
 
       // ディレクトリ列を追加（オプション）
       if (includeDirectoryColumns) {
-        for (let i = 0; i <= maxLevel; i++) {
+        for (let i = 1; i <= maxLevel; i++) {
           row.push(i === data.level ? data.directoryName : null);
         }
       }
@@ -184,7 +191,7 @@ export async function POST(request: Request) {
       colWidths.push({ wch: 25 }); // タイトル列
     }
     if (includeDirectoryColumns) {
-      for (let i = 0; i <= maxLevel; i++) {
+      for (let i = 1; i <= maxLevel; i++) {
         colWidths.push({ wch: 20 }); // ディレクトリ列
       }
     }
