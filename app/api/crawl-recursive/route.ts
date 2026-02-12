@@ -3,7 +3,7 @@ import { crawlSite } from '@/lib/crawler';
 
 export async function POST(request: Request) {
   try {
-    const { url, maxDepth, username, password, excludePatterns } = await request.json();
+    const { url, username, password, excludePatterns } = await request.json();
 
     if (!url) {
       return NextResponse.json({ error: 'URLが必要です' }, { status: 400 });
@@ -13,7 +13,6 @@ export async function POST(request: Request) {
 
     const result = await crawlSite({
       url,
-      maxDepth: maxDepth || 2,
       username,
       password,
       excludePatterns: excludePatterns || []

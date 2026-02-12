@@ -14,10 +14,11 @@ function encodeBase64(input: string): string {
 }
 
 const MAX_REDIRECTS = 5;
+const MAX_PAGES = 1000;  // 最大ページ数制限
+const MAX_CRAWL_DURATION_MS = 5 * 60 * 1000;  // 最大5分
 
 export interface CrawlOptions {
   url: string;
-  maxDepth?: number;
   username?: string;
   password?: string;
   excludePatterns?: string[];
@@ -257,7 +258,6 @@ export async function crawlSiteFlat(
   options: CrawlOptions
 ): Promise<Map<string, PageInfo>> {
   const {
-    maxDepth = 3,
     username,
     password,
     excludePatterns = []
@@ -266,6 +266,7 @@ export async function crawlSiteFlat(
   const visited = new Set<string>();
   const pages = new Map<string, PageInfo>();
   const queue: string[] = [startUrl];
+  const startTime = Date.now();  // 開始時刻を記録
 
   while (queue.length > 0) {
     const currentUrl = queue.shift()!;
@@ -275,11 +276,16 @@ export async function crawlSiteFlat(
       continue;
     }
 
-    // 深度チェック（ルートURLからの階層）
-    const depth = getUrlDepth(currentUrl);
-    const rootDepth = getUrlDepth(startUrl);
-    if (depth - rootDepth > maxDepth) {
-      continue;
+    // ページ数制限チェック
+    if (visited.size >= MAX_PAGES) {
+      console.warn(`最大ページ数 (${MAX_PAGES}) に到達しました。クロールを停止します。`);
+      break;
+    }
+
+    // 時間制限チェック
+    if (Date.now() - startTime > MAX_CRAWL_DURATION_MS) {
+      console.warn(`最大クロール時間 (${MAX_CRAWL_DURATION_MS}ms) を超過しました。クロールを停止します。`);
+      break;
     }
 
     // 除外パターンチェック

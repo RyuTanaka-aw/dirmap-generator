@@ -15,7 +15,6 @@ export default function Home() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [useAuth, setUseAuth] = useState(false);
-  const [maxDepth, setMaxDepth] = useState(2);
   const [excludePatterns, setExcludePatterns] = useState('');
   const [includeDirectoryColumns, setIncludeDirectoryColumns] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -37,7 +36,6 @@ export default function Home() {
         },
         body: JSON.stringify({
           url,
-          maxDepth,
           username: useAuth ? username : undefined,
           password: useAuth ? password : undefined,
           excludePatterns: excludePatterns.split(',').map(p => p.trim()).filter(Boolean)
@@ -179,23 +177,6 @@ export default function Home() {
                 placeholder="https://example.com"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                クロール深度（階層数）
-              </label>
-              <input
-                type="number"
-                value={maxDepth}
-                onChange={(e) => setMaxDepth(parseInt(e.target.value))}
-                min="1"
-                max="5"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                ※ URL構造での深度（推奨: 2-3階層）
-              </p>
             </div>
 
             <div>
