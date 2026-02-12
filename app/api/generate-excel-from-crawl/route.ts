@@ -103,7 +103,7 @@ function flattenCrawlResult(
 
 export async function POST(request: Request) {
   try {
-    const { crawlResult, includeDirectoryColumns = false } = await request.json();
+    const { crawlResult, completedAt, includeDirectoryColumns = false } = await request.json();
 
     if (!crawlResult) {
       return NextResponse.json({ error: 'クロール結果が必要です' }, { status: 400 });
@@ -156,8 +156,9 @@ export async function POST(request: Request) {
     // タイトル行・出力日時行を作成
     const rootTitle = crawlResult.title || '';
     const titleText = `${rootTitle} ディレクトリマップ`;
-    const now = new Date();
-    const dateStr = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    // completedAtがあればそれを使用、なければ現在時刻（後方互換性）
+    const timestamp = completedAt ? new Date(completedAt) : new Date();
+    const dateStr = `${timestamp.getFullYear()}/${String(timestamp.getMonth() + 1).padStart(2, '0')}/${String(timestamp.getDate()).padStart(2, '0')} ${String(timestamp.getHours()).padStart(2, '0')}:${String(timestamp.getMinutes()).padStart(2, '0')}`;
     const dateText = `出力日時: ${dateStr}`;
 
     // タイトル結合範囲: A2からNo列+深度列分（列0〜列maxLevel+1-1）
@@ -393,8 +394,10 @@ export async function POST(request: Request) {
     // Excelファイルをバッファに書き込み
     const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
 
-    const timestamp = new Date().toISOString().slice(0, 10);
-    const filename = `sitemap_${timestamp}.xlsx`;
+    // completedAtがあればそれを使用、なければ現在時刻（後方互換性）
+    const fileTimestamp = completedAt ? new Date(completedAt) : new Date();
+    const dateString = fileTimestamp.toISOString().slice(0, 10);
+    const filename = `sitemap_${dateString}.xlsx`;
 
     return new NextResponse(buffer, {
       headers: {

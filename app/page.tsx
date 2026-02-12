@@ -20,12 +20,14 @@ export default function Home() {
   const [includeDirectoryColumns, setIncludeDirectoryColumns] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<CrawlResult | null>(null);
+  const [completedAt, setCompletedAt] = useState<string>('');
   const [error, setError] = useState('');
 
   const handleCrawl = async () => {
     setLoading(true);
     setError('');
     setResult(null);
+    setCompletedAt('');
 
     try {
       const response = await fetch('/api/crawl-recursive', {
@@ -48,7 +50,8 @@ export default function Home() {
         throw new Error(data.error || 'クロールに失敗しました');
       }
 
-      setResult(data);
+      setResult(data.result);
+      setCompletedAt(data.completedAt);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       setError(errorMessage);
@@ -69,7 +72,11 @@ export default function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ crawlResult: result, includeDirectoryColumns }),
+        body: JSON.stringify({
+          crawlResult: result,
+          completedAt,
+          includeDirectoryColumns
+        }),
       });
 
       if (!response.ok) {

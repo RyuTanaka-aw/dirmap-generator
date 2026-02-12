@@ -19,9 +19,13 @@ export async function POST(request: Request) {
       excludePatterns: excludePatterns || []
     });
 
-    console.log('クロール完了');
+    const completedAt = new Date().toISOString();
+    console.log('クロール完了:', completedAt);
 
-    return NextResponse.json(result);
+    return NextResponse.json({
+      result,
+      completedAt
+    });
 
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
