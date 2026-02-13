@@ -21,6 +21,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<CrawlResult | null>(null);
   const [completedAt, setCompletedAt] = useState<string>('');
+  const [savedFileName, setSavedFileName] = useState<string>('');
   const [error, setError] = useState('');
 
   const handleCrawl = async () => {
@@ -28,6 +29,7 @@ export default function Home() {
     setError('');
     setResult(null);
     setCompletedAt('');
+    setSavedFileName('');
 
     try {
       const response = await fetch('/api/crawl-recursive', {
@@ -56,6 +58,7 @@ export default function Home() {
 
       if (data.savedFileName) {
         console.log('サーバーに自動保存されました:', data.savedFileName);
+        setSavedFileName(data.savedFileName);
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
@@ -71,48 +74,33 @@ export default function Home() {
       return;
     }
 
-    // 開発ドメインのバリデーション
-    if (devDomain) {
-      try {
-        new URL(devDomain);
-      } catch {
-        alert('開発環境URLの形式が正しくありません');
-        return;
-      }
+    if (!savedFileName) {
+      alert('保存されたファイルが見つかりません');
+      return;
     }
 
     try {
-      const response = await fetch('/api/generate-excel-from-crawl', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          crawlResult: result,
-          completedAt,
-          includeDirectoryColumns,
-          ...(devDomain && { devDomain })
-        }),
-      });
+      // 既存の保存済みファイルをダウンロード
+      const response = await fetch(`/api/download/${savedFileName}`);
 
       if (!response.ok) {
-        throw new Error('Excel生成に失敗しました');
+        throw new Error('ファイルのダウンロードに失敗しました');
       }
 
       const blob = await response.blob();
       const downloadUrl = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = downloadUrl;
-      a.download = 'sitemap.xlsx';
+      a.download = savedFileName; // 正しいファイル名を使用
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(downloadUrl);
       document.body.removeChild(a);
 
-      alert('Excelファイルのダウンロードが完了しました!\nサーバーにも保存されています。履歴ページから再ダウンロードできます。');
+      alert('Excelファイルのダウンロードが完了しました!');
     } catch (error) {
-      console.error('エクスポートエラー:', error);
-      alert('Excelのエクスポートに失敗しました');
+      console.error('ダウンロードエラー:', error);
+      alert('Excelのダウンロードに失敗しました');
     }
   };
 
