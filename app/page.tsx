@@ -104,50 +104,6 @@ export default function Home() {
     }
   };
 
-  // ツリー表示用のコンポーネント
-  const TreeNode = ({ node, level = 0 }: { node: CrawlResult; level?: number }) => {
-    const [isOpen, setIsOpen] = useState(true);
-    const hasChildren = node.children && node.children.length > 0;
-
-    return (
-      <div className="ml-4">
-        <div className="flex items-center py-1">
-          {hasChildren && (
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="mr-2 text-gray-500 hover:text-gray-700"
-            >
-              {isOpen ? '▼' : '▶'}
-            </button>
-          )}
-          {!hasChildren && <span className="mr-2 w-4"></span>}
-          <div className="flex-1">
-            <a
-              href={node.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline text-sm"
-            >
-              {node.url}
-            </a>
-            <span className="ml-2 text-gray-500 text-sm">
-              ({node.title})
-            </span>
-            <span className="ml-2 text-gray-400 text-xs">
-              [深度: {node.depth}]
-            </span>
-          </div>
-        </div>
-        {isOpen && hasChildren && (
-          <div className="border-l-2 border-gray-200 ml-2">
-            {node.children.map((child, index) => (
-              <TreeNode key={index} node={child} level={level + 1} />
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
 
   // URL数を再帰的にカウント
   const countUrls = (node: CrawlResult): number => {
@@ -298,32 +254,43 @@ export default function Home() {
 
         {/* 結果表示 */}
         {result && (
-          <div className="bg-white shadow-md rounded-lg p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">クロール結果</h2>
+          <div className="bg-white shadow-md rounded-lg p-8">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">クロールが完了しました</h2>
+            </div>
+
+            <div className="bg-gray-50 rounded-lg p-6 mb-6">
+              <h3 className="font-semibold text-gray-700 mb-4">基本情報</h3>
+              <div className="space-y-3">
+                <div className="flex">
+                  <span className="text-gray-600 w-32">ルートURL:</span>
+                  <span className="text-gray-800 font-medium flex-1 break-all">{result.url}</span>
+                </div>
+                <div className="flex">
+                  <span className="text-gray-600 w-32">総URL数:</span>
+                  <span className="text-gray-800 font-medium">{countUrls(result)}</span>
+                </div>
+                {completedAt && (
+                  <div className="flex">
+                    <span className="text-gray-600 w-32">完了時刻:</span>
+                    <span className="text-gray-800 font-medium">{completedAt}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="text-center">
               <button
                 onClick={handleExportToExcel}
-                className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors"
+                className="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-8 rounded-lg text-lg transition-colors shadow-md hover:shadow-lg"
               >
-                Excelでエクスポート
+                Excelファイルをダウンロード
               </button>
-            </div>
-
-            <div className="bg-gray-50 p-4 rounded-md mb-4">
-              <p className="mb-2">
-                <strong>ルートURL:</strong> {result.url}
-              </p>
-              <p className="mb-2">
-                <strong>ページタイトル:</strong> {result.title}
-              </p>
-              <p>
-                <strong>総URL数:</strong> {countUrls(result)}
-              </p>
-            </div>
-
-            <div className="border rounded-md p-4 bg-white max-h-[600px] overflow-y-auto">
-              <h3 className="font-bold mb-3">ディレクトリ構造（URL階層順）</h3>
-              <TreeNode node={result} />
             </div>
           </div>
         )}
