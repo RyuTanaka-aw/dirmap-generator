@@ -39,7 +39,9 @@ export default function Home() {
           url,
           username: useAuth ? username : undefined,
           password: useAuth ? password : undefined,
-          excludePatterns: excludePatterns.split(',').map(p => p.trim()).filter(Boolean)
+          excludePatterns: excludePatterns.split(',').map(p => p.trim()).filter(Boolean),
+          includeDirectoryColumns,
+          devDomain: devDomain || undefined
         }),
       });
 
@@ -51,6 +53,10 @@ export default function Home() {
 
       setResult(data.result);
       setCompletedAt(data.completedAt);
+
+      if (data.savedFileName) {
+        console.log('サーバーに自動保存されました:', data.savedFileName);
+      }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       setError(errorMessage);
@@ -103,7 +109,7 @@ export default function Home() {
       window.URL.revokeObjectURL(downloadUrl);
       document.body.removeChild(a);
 
-      alert('Excelファイルのダウンロードが完了しました!');
+      alert('Excelファイルのダウンロードが完了しました!\nサーバーにも保存されています。履歴ページから再ダウンロードできます。');
     } catch (error) {
       console.error('エクスポートエラー:', error);
       alert('Excelのエクスポートに失敗しました');
@@ -169,9 +175,17 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center p-8 bg-gray-50">
       <div className="w-full max-w-6xl">
-        <h1 className="text-4xl font-bold mb-8 text-center">
+        <h1 className="text-4xl font-bold mb-4 text-center">
           サイトマップ生成ツール
         </h1>
+        <div className="text-center mb-6">
+          <a
+            href="/history"
+            className="text-blue-600 hover:text-blue-800 underline"
+          >
+            履歴一覧を見る
+          </a>
+        </div>
 
         {/* 入力フォーム */}
         <div className="bg-white shadow-md rounded-lg p-6 mb-6">
