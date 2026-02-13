@@ -11,16 +11,24 @@ export async function POST(request: Request) {
     }
 
     // 共通のExcel生成関数を使用
-    const { buffer, fileName } = await generateExcelFromCrawlResult({
+    const { buffer } = await generateExcelFromCrawlResult({
       crawlResult,
       completedAt,
       includeDirectoryColumns,
       devDomain
     });
 
-    // サーバーにファイルを保存（エラーが発生してもクライアントへのレスポンスは継続）
+    // ファイル名を決定し、サーバーに保存（エラーが発生してもクライアントへのレスポンスは継続）
+    let fileName = '';
     try {
-      const filePath = await saveExcelFile(buffer, fileName);
+      const timestamp = completedAt ? new Date(completedAt) : undefined;
+      const { filePath, fileName: generatedFileName } = await saveExcelFile(
+        buffer,
+        crawlResult.url,
+        timestamp
+      );
+      fileName = generatedFileName;
+
       await addSitemapMetadata(
         crawlResult.url,
         crawlResult.title,
@@ -31,6 +39,8 @@ export async function POST(request: Request) {
       console.log('サーバー保存成功:', fileName);
     } catch (saveError) {
       console.error('サーバー保存エラー:', saveError);
+      // フォールバックのファイル名を生成
+      fileName = `sitemap_${Date.now()}.xlsx`;
       // クライアントには通常通りBlobを返却（ダウンロードは成功）
     }
 

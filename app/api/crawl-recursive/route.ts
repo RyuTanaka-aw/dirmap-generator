@@ -26,14 +26,20 @@ export async function POST(request: Request) {
     // クロール完了後、自動的にExcelを生成してサーバーに保存
     let savedFileName: string | null = null;
     try {
-      const { buffer, fileName } = await generateExcelFromCrawlResult({
+      const { buffer } = await generateExcelFromCrawlResult({
         crawlResult: result,
         completedAt,
         includeDirectoryColumns,
         devDomain
       });
 
-      const filePath = await saveExcelFile(buffer, fileName);
+      const timestamp = completedAt ? new Date(completedAt) : undefined;
+      const { filePath, fileName } = await saveExcelFile(
+        buffer,
+        url,
+        timestamp
+      );
+
       await addSitemapMetadata(url, result.title, fileName, filePath, {
         ...result,
         completed_at: completedAt

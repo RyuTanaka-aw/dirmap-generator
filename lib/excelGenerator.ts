@@ -439,15 +439,9 @@ export async function generateExcelFromCrawlResult(
   // Excelファイルをバッファに書き込み
   const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
 
-  // ファイル名を生成（ドメインベース）
-  const urlObj = new URL(crawlResult.url);
-  const domain = urlObj.hostname.replace(/^www\./, '');
-  const fileTimestamp = completedAt ? new Date(completedAt) : new Date();
-  const fileDateStr = `${fileTimestamp.getFullYear()}-${String(fileTimestamp.getMonth() + 1).padStart(2, '0')}-${String(fileTimestamp.getDate()).padStart(2, '0')}`;
-  const fileName = `sitemap_${domain}_${fileDateStr}.xlsx`;
-
+  // ファイル名はfileManager.tsで生成されるため、空文字列を返す（後方互換性のため）
   return {
     buffer: Buffer.from(buffer),
-    fileName
+    fileName: ''
   };
 }
