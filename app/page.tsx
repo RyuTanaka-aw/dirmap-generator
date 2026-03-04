@@ -141,7 +141,10 @@ export default function Home() {
           <Card>
             <CardHeader>
               <CardTitle>クロール設定</CardTitle>
-              <CardDescription>対象のURLを入力してクロールを開始します</CardDescription>
+              <CardDescription>
+                <span className="hidden md:inline">対象のURLを入力してクロールを開始します</span>
+                <span className="md:hidden">クロールするWebサイトの設定を入力してください</span>
+              </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
 
@@ -167,7 +170,10 @@ export default function Home() {
               {/* Basic認証チェックボックス */}
               <div className="flex items-center gap-2">
                 <Checkbox id="useAuth" checked={useAuth} onCheckedChange={(c) => setUseAuth(!!c)} />
-                <Label htmlFor="useAuth" className="font-medium cursor-pointer">Basic認証が必要</Label>
+                <Label htmlFor="useAuth" className="font-medium cursor-pointer">
+                  <span className="hidden md:inline">Basic認証が必要</span>
+                  <span className="md:hidden">Basic認証を使用する</span>
+                </Label>
               </div>
 
               {/* 認証フィールド（条件付き表示） */}
@@ -191,7 +197,8 @@ export default function Home() {
                 <Checkbox id="includeDir" checked={includeDirectoryColumns}
                   onCheckedChange={(c) => setIncludeDirectoryColumns(!!c)} />
                 <Label htmlFor="includeDir" className="font-medium cursor-pointer">
-                  ディレクトリパス列を追加
+                  <span className="hidden md:inline">ディレクトリパス列を追加</span>
+                  <span className="md:hidden">ディレクトリパスを含める</span>
                 </Label>
               </div>
 
@@ -225,8 +232,11 @@ export default function Home() {
                   <span className="font-medium break-all text-right max-w-[60%]">{result.url}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">総URL数</span>
-                  <span className="font-medium">{countUrls(result)}ページ</span>
+                  <span className="text-muted-foreground">
+                    <span className="hidden md:inline">総URL数</span>
+                    <span className="md:hidden">URLページ数</span>
+                  </span>
+                  <span className="font-medium text-primary">{countUrls(result)}ページ</span>
                 </div>
                 {completedAt && (
                   <div className="flex items-center justify-between text-sm">

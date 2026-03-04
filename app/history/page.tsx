@@ -112,8 +112,9 @@ export default function HistoryPage() {
           <>
             {/* Title row */}
             <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-semibold">サイトマップ履歴</h1>
-              <span className="text-sm text-muted-foreground">{filteredSitemaps.length}件</span>
+              <h1 className="text-2xl font-bold md:font-semibold">サイトマップ履歴</h1>
+              <span className="hidden md:inline text-sm text-primary font-semibold">{filteredSitemaps.length}件</span>
+              <Badge className="md:hidden">{filteredSitemaps.length}件</Badge>
             </div>
 
             {/* Search */}
@@ -154,7 +155,7 @@ export default function HistoryPage() {
                           </TableCell>
                           <TableCell className="text-muted-foreground">{formatDate(sitemap.createdAt)}</TableCell>
                           <TableCell>
-                            <Button variant="outline" size="sm"
+                            <Button size="sm"
                               onClick={() => handleDownload(sitemap.fileName)}>
                               ダウンロード
                             </Button>
@@ -172,7 +173,7 @@ export default function HistoryPage() {
                 <div className="flex md:hidden flex-col gap-3">
                   {filteredSitemaps.map((sitemap) => (
                     <div key={sitemap.id}
-                      className="rounded-lg border bg-card p-4 flex flex-col gap-3">
+                      className="rounded-lg border border-[#2563EB] bg-card p-4 flex flex-col gap-3">
                       <p className="text-sm font-semibold">{sitemap.domain}</p>
                       <p className="text-xs text-muted-foreground truncate">{sitemap.topPageTitle}</p>
                       <div className="flex items-center gap-2 flex-wrap">
