@@ -3,7 +3,7 @@ import { readSitemapsData } from '@/lib/fileManager';
 
 /**
  * GET /api/sitemaps
- * サイトマップのメタデータ一覧を取得
+ * ディレクトリマップのメタデータ一覧を取得
  */
 export async function GET() {
   try {

@@ -4574,7 +4574,7 @@
                   "id": "iA3SJ",
                   "name": "logoText",
                   "fill": "$--foreground",
-                  "content": "サイトマップ生成ツール",
+                  "content": "ディレクトリマップ生成ツール",
                   "fontFamily": "Inter",
                   "fontSize": 16,
                   "fontWeight": "700"
@@ -5051,7 +5051,7 @@
                   "id": "O4XzG",
                   "name": "logo2Text",
                   "fill": "$--foreground",
-                  "content": "サイトマップ生成ツール",
+                  "content": "ディレクトリマップ生成ツール",
                   "fontFamily": "Inter",
                   "fontSize": 16,
                   "fontWeight": "700"
@@ -5116,7 +5116,7 @@
                   "id": "dAXJg",
                   "name": "pageTitle",
                   "fill": "$--foreground",
-                  "content": "サイトマップ履歴",
+                  "content": "ディレクトリマップ履歴",
                   "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": "600"
@@ -5737,7 +5737,7 @@
               "id": "LpqR4",
               "name": "spHdrLogo",
               "fill": "$--foreground",
-              "content": "サイトマップ生成ツール",
+              "content": "ディレクトリマップ生成ツール",
               "fontFamily": "Inter",
               "fontSize": 14,
               "fontWeight": "700"
@@ -6247,7 +6247,7 @@
               "id": "8IXpP",
               "name": "spHdr2Title",
               "fill": "$--foreground",
-              "content": "サイトマップ生成ツール",
+              "content": "ディレクトリマップ生成ツール",
               "fontFamily": "Inter",
               "fontSize": 14,
               "fontWeight": "700"
@@ -6276,7 +6276,7 @@
                   "id": "3XVMV",
                   "name": "pgTitleTxt",
                   "fill": "$--foreground",
-                  "content": "サイトマップ履歴",
+                  "content": "ディレクトリマップ履歴",
                   "fontFamily": "Inter",
                   "fontSize": 24,
                   "fontWeight": "700"

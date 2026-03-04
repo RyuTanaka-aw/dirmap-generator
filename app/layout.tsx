@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "サイトマップ生成ツール",
-  description: "WebサイトをクロールしてサイトマップをExcelで出力するツール",
+  title: "ディレクトリマップ生成ツール",
+  description: "WebサイトをクロールしてディレクトリマップをExcelで出力するツール",
 };
 
 export default function RootLayout({

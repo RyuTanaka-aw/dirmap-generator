@@ -434,7 +434,7 @@ export async function generateExcelFromCrawlResult(
 
   // ワークブックを作成
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'サイトマップ');
+  XLSX.utils.book_append_sheet(wb, ws, 'ディレクトリマップ');
 
   // Excelファイルをバッファに書き込み
   const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });

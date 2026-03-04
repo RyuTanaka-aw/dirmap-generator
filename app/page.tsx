@@ -128,7 +128,7 @@ export default function Home() {
 
       {/* Header */}
       <header className="h-16 bg-card border-b flex items-center justify-between px-8 shrink-0">
-        <span className="text-base font-semibold">サイトマップ生成ツール</span>
+        <span className="text-base font-semibold">ディレクトリマップ生成ツール</span>
         <Link href="/history" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
           <History className="w-4 h-4" /> 履歴
         </Link>

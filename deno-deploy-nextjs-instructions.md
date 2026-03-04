@@ -1,7 +1,7 @@
 # Next.jsアプリをDeno Deployにデプロイする指示書
 
 ## 目的
-Cloudflareからの移行を含め、Next.jsサイトマップ生成ツールをDeno Deployに丸ごとデプロイする。
+Cloudflareからの移行を含め、Next.jsディレクトリマップ生成ツールをDeno Deployに丸ごとデプロイする。
 
 ---
 
