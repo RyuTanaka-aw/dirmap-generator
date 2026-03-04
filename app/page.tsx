@@ -1,6 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import { History, CircleCheck } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface CrawlResult {
   url: string;
@@ -104,7 +112,6 @@ export default function Home() {
     }
   };
 
-
   // URL数を再帰的にカウント
   const countUrls = (node: CrawlResult): number => {
     let count = 1;
@@ -117,184 +124,127 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-8 bg-gray-50">
-      <div className="w-full max-w-6xl">
-        <h1 className="text-4xl font-bold mb-4 text-center">
-          サイトマップ生成ツール
-        </h1>
-        <div className="text-center mb-6">
-          <a
-            href="/history"
-            className="text-blue-600 hover:text-blue-800 underline"
-          >
-            履歴一覧を見る
-          </a>
-        </div>
+    <div className="flex min-h-screen flex-col bg-background">
 
-        {/* 入力フォーム */}
-        <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-          <h2 className="text-2xl font-bold mb-4">クロール設定</h2>
+      {/* Header */}
+      <header className="h-16 bg-card border-b flex items-center justify-between px-8 shrink-0">
+        <span className="text-base font-semibold">サイトマップ生成ツール</span>
+        <Link href="/history" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <History className="w-4 h-4" /> 履歴
+        </Link>
+      </header>
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                対象URL <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://example.com"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+      <main className="flex-1 flex flex-col items-center py-12 px-4 md:px-8">
+        <div className="w-full max-w-[640px] flex flex-col gap-6">
 
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                開発環境URL（任意）
-              </label>
-              <input
-                type="text"
-                value={devDomain}
-                onChange={(e) => setDevDomain(e.target.value)}
-                placeholder="https://dev.example.com"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                本番URLと同じパス構造で開発環境URLを生成します
-              </p>
-            </div>
+          {/* Form Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle>クロール設定</CardTitle>
+              <CardDescription>対象のURLを入力してクロールを開始します</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
 
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                除外パターン（任意）
-              </label>
-              <input
-                type="text"
-                value={excludePatterns}
-                onChange={(e) => setExcludePatterns(e.target.value)}
-                placeholder="/admin/*, *.pdf, /api/*"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                カンマ区切りで複数指定可能
-              </p>
-            </div>
-
-            <div>
-              <label className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={useAuth}
-                  onChange={(e) => setUseAuth(e.target.checked)}
-                  className="rounded"
-                />
-                <span className="text-sm font-medium">Basic認証が必要</span>
-              </label>
-            </div>
-
-            {useAuth && (
-              <div className="grid grid-cols-2 gap-4 pl-6 border-l-2 border-gray-200">
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    ユーザー名
-                  </label>
-                  <input
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    パスワード
-                  </label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="url">対象URL</Label>
+                <Input id="url" value={url} onChange={(e) => setUrl(e.target.value)}
+                  placeholder="https://example.com" />
               </div>
-            )}
 
-            <div>
-              <label className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={includeDirectoryColumns}
-                  onChange={(e) => setIncludeDirectoryColumns(e.target.checked)}
-                  className="rounded"
-                />
-                <span className="text-sm font-medium">ディレクトリパス列を追加</span>
-              </label>
-              <p className="text-xs text-gray-500 mt-1 ml-6">
-                各ページのURLパスセグメント名をディレクトリ列に表示します
-              </p>
-            </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="devDomain">開発環境URL（任意）</Label>
+                <Input id="devDomain" value={devDomain} onChange={(e) => setDevDomain(e.target.value)}
+                  placeholder="http://localhost:3000" />
+              </div>
 
-            <button
-              onClick={handleCrawl}
-              disabled={loading || !url}
-              className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-            >
-              {loading ? 'クロール中...' : 'クロール開始'}
-            </button>
-          </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="excludePatterns">除外パターン（任意）</Label>
+                <Input id="excludePatterns" value={excludePatterns}
+                  onChange={(e) => setExcludePatterns(e.target.value)}
+                  placeholder="/admin/, /api/" />
+              </div>
 
-          {/* エラー表示 */}
+              {/* Basic認証チェックボックス */}
+              <div className="flex items-center gap-2">
+                <Checkbox id="useAuth" checked={useAuth} onCheckedChange={(c) => setUseAuth(!!c)} />
+                <Label htmlFor="useAuth" className="font-medium cursor-pointer">Basic認証が必要</Label>
+              </div>
+
+              {/* 認証フィールド（条件付き表示） */}
+              {useAuth && (
+                <div className="flex flex-col md:flex-row gap-4 pl-6 border-l-2 border-border">
+                  <div className="flex flex-col gap-1.5 flex-1">
+                    <Label htmlFor="username">ユーザー名</Label>
+                    <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)}
+                      placeholder="username" />
+                  </div>
+                  <div className="flex flex-col gap-1.5 flex-1">
+                    <Label htmlFor="password">パスワード</Label>
+                    <Input id="password" type="password" value={password}
+                      onChange={(e) => setPassword(e.target.value)} placeholder="password" />
+                  </div>
+                </div>
+              )}
+
+              {/* ディレクトリパスチェックボックス */}
+              <div className="flex items-center gap-2">
+                <Checkbox id="includeDir" checked={includeDirectoryColumns}
+                  onCheckedChange={(c) => setIncludeDirectoryColumns(!!c)} />
+                <Label htmlFor="includeDir" className="font-medium cursor-pointer">
+                  ディレクトリパス列を追加
+                </Label>
+              </div>
+
+            </CardContent>
+            <CardFooter>
+              <Button className="w-full" onClick={handleCrawl} disabled={loading || !url}>
+                {loading ? 'クロール中...' : 'クロール開始'}
+              </Button>
+            </CardFooter>
+          </Card>
+
+          {/* Error Alert */}
           {error && (
-            <div className="mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-              <strong>エラー:</strong> {error}
-            </div>
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
           )}
-        </div>
 
-        {/* 結果表示 */}
-        {result && (
-          <div className="bg-white shadow-md rounded-lg p-8">
-            <div className="text-center mb-6">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">クロールが完了しました</h2>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-6 mb-6">
-              <h3 className="font-semibold text-gray-700 mb-4">基本情報</h3>
-              <div className="space-y-3">
-                <div className="flex">
-                  <span className="text-gray-600 w-32">ルートURL:</span>
-                  <span className="text-gray-800 font-medium flex-1 break-all">{result.url}</span>
+          {/* Result Card */}
+          {result && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <CircleCheck className="w-5 h-5 text-primary" />
+                  <CardTitle>クロールが完了しました</CardTitle>
                 </div>
-                <div className="flex">
-                  <span className="text-gray-600 w-32">総URL数:</span>
-                  <span className="text-gray-800 font-medium">{countUrls(result)}</span>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">ルートURL</span>
+                  <span className="font-medium break-all text-right max-w-[60%]">{result.url}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">総URL数</span>
+                  <span className="font-medium">{countUrls(result)}ページ</span>
                 </div>
                 {completedAt && (
-                  <div className="flex">
-                    <span className="text-gray-600 w-32">完了時刻:</span>
-                    <span className="text-gray-800 font-medium">{completedAt}</span>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">完了時刻</span>
+                    <span className="font-medium">{completedAt}</span>
                   </div>
                 )}
-              </div>
-            </div>
+              </CardContent>
+              <CardFooter>
+                <Button className="w-full" onClick={handleExportToExcel}>
+                  Excelファイルをダウンロード
+                </Button>
+              </CardFooter>
+            </Card>
+          )}
 
-            <div className="text-center">
-              <button
-                onClick={handleExportToExcel}
-                className="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-8 rounded-lg text-lg transition-colors shadow-md hover:shadow-lg"
-              >
-                Excelファイルをダウンロード
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    </main>
+        </div>
+      </main>
+    </div>
   );
 }

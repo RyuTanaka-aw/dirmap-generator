@@ -1,6 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { SitemapMetadata, SitemapsData } from '@/lib/types';
 
 export default function HistoryPage() {
@@ -81,135 +87,119 @@ export default function HistoryPage() {
     });
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-gray-600">読み込み中...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="bg-white p-6 rounded-lg shadow-lg">
-          <p className="text-red-600 font-bold">エラー</p>
-          <p className="text-gray-700">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* ヘッダー */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            サイトマップ履歴
-          </h1>
-          <a
-            href="/"
-            className="text-blue-600 hover:text-blue-800 underline"
-          >
-            ← トップページに戻る
-          </a>
-        </div>
+    <div className="flex min-h-screen flex-col bg-background">
 
-        {/* 検索ボックス */}
-        <div className="mb-6">
-          <input
-            type="text"
-            placeholder="ドメイン名・タイトルで検索..."
-            value={searchKeyword}
-            onChange={(e) => setSearchKeyword(e.target.value)}
-            className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
+      {/* Header */}
+      <header className="h-16 bg-card border-b flex items-center justify-between px-8 shrink-0">
+        <span className="text-base font-semibold">サイトマップ生成ツール</span>
+        <Link href="/" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft className="w-4 h-4" /> ツールに戻る
+        </Link>
+      </header>
 
-        {/* 検索結果カウント */}
-        <div className="mb-4 text-gray-600">
-          {filteredSitemaps.length} 件の履歴
-          {searchKeyword && ` (「${searchKeyword}」で検索)`}
-        </div>
+      <main className="flex-1 p-4 md:p-8 flex flex-col gap-6">
 
-        {/* テーブル */}
-        {filteredSitemaps.length === 0 ? (
-          <div className="bg-white p-6 rounded-lg shadow text-center text-gray-600">
-            履歴がありません
+        {loading ? (
+          <div className="flex flex-1 items-center justify-center">
+            <p className="text-sm text-muted-foreground">読み込み中...</p>
+          </div>
+        ) : error ? (
+          <div className="flex flex-1 items-center justify-center">
+            <p className="text-sm text-destructive">{error}</p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      ドメイン
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      TOPページタイトル
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      ページ数
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      開発URL
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      生成日時
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      操作
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredSitemaps.map((sitemap) => (
-                    <tr key={sitemap.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <div className="max-w-xs truncate" title={sitemap.domain}>
-                          {sitemap.domain}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        <div className="max-w-md truncate" title={sitemap.topPageTitle}>
-                          {sitemap.topPageTitle}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {sitemap.totalPages}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {sitemap.hasDevUrl ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            あり
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                            なし
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatDate(sitemap.createdAt)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <button
-                          onClick={() => handleDownload(sitemap.fileName)}
-                          className="text-blue-600 hover:text-blue-900 font-medium"
-                        >
-                          ダウンロード
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <>
+            {/* Title row */}
+            <div className="flex items-center justify-between">
+              <h1 className="text-2xl font-semibold">サイトマップ履歴</h1>
+              <span className="text-sm text-muted-foreground">{filteredSitemaps.length}件</span>
             </div>
-          </div>
+
+            {/* Search */}
+            <Input placeholder="ドメイン・タイトルで検索..."
+              value={searchKeyword} onChange={(e) => setSearchKeyword(e.target.value)} />
+
+            {filteredSitemaps.length === 0 ? (
+              <div className="flex flex-1 items-center justify-center">
+                <p className="text-sm text-muted-foreground">履歴がありません</p>
+              </div>
+            ) : (
+              <>
+                {/* Desktop Table */}
+                <div className="hidden md:block rounded-lg border bg-card">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[220px]">ドメイン</TableHead>
+                        <TableHead>TOPページタイトル</TableHead>
+                        <TableHead className="w-[100px]">ページ数</TableHead>
+                        <TableHead className="w-[100px]">開発URL</TableHead>
+                        <TableHead className="w-[160px]">生成日時</TableHead>
+                        <TableHead className="w-[150px]">操作</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredSitemaps.map((sitemap) => (
+                        <TableRow key={sitemap.id}>
+                          <TableCell className="font-medium">{sitemap.domain}</TableCell>
+                          <TableCell className="max-w-0">
+                            <span className="block truncate">{sitemap.topPageTitle}</span>
+                          </TableCell>
+                          <TableCell>{sitemap.totalPages}</TableCell>
+                          <TableCell>
+                            {sitemap.hasDevUrl
+                              ? <Badge>あり</Badge>
+                              : <Badge variant="secondary">なし</Badge>}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">{formatDate(sitemap.createdAt)}</TableCell>
+                          <TableCell>
+                            <Button variant="outline" size="sm"
+                              onClick={() => handleDownload(sitemap.fileName)}>
+                              ダウンロード
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  <div className="border-t px-4 py-3 text-center text-sm text-muted-foreground">
+                    全{filteredSitemaps.length}件表示中
+                  </div>
+                </div>
+
+                {/* Mobile Card List */}
+                <div className="flex md:hidden flex-col gap-3">
+                  {filteredSitemaps.map((sitemap) => (
+                    <div key={sitemap.id}
+                      className="rounded-lg border bg-card p-4 flex flex-col gap-3">
+                      <p className="text-sm font-semibold">{sitemap.domain}</p>
+                      <p className="text-xs text-muted-foreground truncate">{sitemap.topPageTitle}</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge variant="secondary">{sitemap.totalPages}ページ</Badge>
+                        {sitemap.hasDevUrl
+                          ? <Badge>開発URLあり</Badge>
+                          : <Badge variant="secondary">開発URLなし</Badge>}
+                        <span className="text-xs text-muted-foreground ml-auto">
+                          {formatDate(sitemap.createdAt)}
+                        </span>
+                      </div>
+                      <Button variant="outline" className="w-full"
+                        onClick={() => handleDownload(sitemap.fileName)}>
+                        ダウンロード
+                      </Button>
+                    </div>
+                  ))}
+                  <p className="text-center text-sm text-muted-foreground">
+                    全{filteredSitemaps.length}件表示中
+                  </p>
+                </div>
+              </>
+            )}
+          </>
         )}
-      </div>
+
+      </main>
     </div>
   );
 }
