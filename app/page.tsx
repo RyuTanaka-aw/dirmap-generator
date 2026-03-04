@@ -18,6 +18,8 @@ interface CrawlResult {
   children: CrawlResult[];
 }
 
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
+
 export default function Home() {
   const [url, setUrl] = useState('');
   const [devDomain, setDevDomain] = useState('');
@@ -32,6 +34,17 @@ export default function Home() {
   const [savedFileName, setSavedFileName] = useState<string>('');
   const [error, setError] = useState('');
 
+  const formatDate = (isoString: string) => {
+    const date = new Date(isoString);
+    return date.toLocaleString('ja-JP', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
   const handleCrawl = async () => {
     setLoading(true);
     setError('');
@@ -40,7 +53,7 @@ export default function Home() {
     setSavedFileName('');
 
     try {
-      const response = await fetch('/api/crawl-recursive', {
+      const response = await fetch(`${BASE_PATH}/api/crawl-recursive`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -89,7 +102,7 @@ export default function Home() {
 
     try {
       // 既存の保存済みファイルをダウンロード
-      const response = await fetch(`/api/download/${savedFileName}`);
+      const response = await fetch(`${BASE_PATH}/api/download/${savedFileName}`);
 
       if (!response.ok) {
         throw new Error('ファイルのダウンロードに失敗しました');
@@ -241,7 +254,7 @@ export default function Home() {
                 {completedAt && (
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">完了時刻</span>
-                    <span className="font-medium">{completedAt}</span>
+                    <span className="font-medium">{formatDate(completedAt)}</span>
                   </div>
                 )}
               </CardContent>

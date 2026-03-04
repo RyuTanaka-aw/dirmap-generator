@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { SitemapMetadata, SitemapsData } from '@/lib/types';
 
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
+
 export default function HistoryPage() {
   const [sitemaps, setSitemaps] = useState<SitemapMetadata[]>([]);
   const [filteredSitemaps, setFilteredSitemaps] = useState<SitemapMetadata[]>([]);
@@ -20,7 +22,7 @@ export default function HistoryPage() {
   useEffect(() => {
     async function fetchSitemaps() {
       try {
-        const response = await fetch('/api/sitemaps');
+        const response = await fetch(`${BASE_PATH}/api/sitemaps`);
         if (!response.ok) {
           throw new Error('メタデータの取得に失敗しました');
         }
@@ -56,7 +58,7 @@ export default function HistoryPage() {
   // ダウンロードハンドラー
   const handleDownload = async (fileName: string) => {
     try {
-      const response = await fetch(`/api/download/${fileName}`);
+      const response = await fetch(`${BASE_PATH}/api/download/${fileName}`);
       if (!response.ok) {
         throw new Error('ファイルのダウンロードに失敗しました');
       }
