@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,8 @@ export default function HistoryPage() {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<SitemapMetadata | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // メタデータを取得
   useEffect(() => {
@@ -77,6 +79,27 @@ export default function HistoryPage() {
     }
   };
 
+  // 削除ハンドラー
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const response = await fetch(`${BASE_PATH}/api/sitemaps/${deleteTarget.id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || '削除に失敗しました');
+      }
+      setSitemaps((prev) => prev.filter((s) => s.id !== deleteTarget.id));
+      setDeleteTarget(null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '削除に失敗しました');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   // 日時フォーマット
   const formatDate = (isoString: string) => {
     const date = new Date(isoString);
@@ -94,7 +117,7 @@ export default function HistoryPage() {
 
       {/* Header */}
       <header className="h-16 bg-card border-b flex items-center justify-between px-8 shrink-0">
-        <span className="text-base font-semibold">ディレクトリマップ生成ツール</span>
+        <Link href="/" className="text-base font-semibold hover:opacity-80 transition-opacity">ディレクトリマップ生成ツール</Link>
         <Link href="/" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="w-4 h-4" /> ツールに戻る
         </Link>
@@ -121,6 +144,7 @@ export default function HistoryPage() {
 
             {/* Search */}
             <Input placeholder="ドメイン・タイトルで検索..."
+              className="bg-white max-w-lg"
               value={searchKeyword} onChange={(e) => setSearchKeyword(e.target.value)} />
 
             {filteredSitemaps.length === 0 ? (
@@ -157,10 +181,17 @@ export default function HistoryPage() {
                           </TableCell>
                           <TableCell className="text-muted-foreground">{formatDate(sitemap.createdAt)}</TableCell>
                           <TableCell>
-                            <Button size="sm"
-                              onClick={() => handleDownload(sitemap.fileName)}>
-                              ダウンロード
-                            </Button>
+                            <div className="flex items-center gap-2">
+                              <Button size="sm"
+                                onClick={() => handleDownload(sitemap.fileName)}>
+                                ダウンロード
+                              </Button>
+                              <Button size="sm" variant="outline"
+                                className="text-destructive hover:text-destructive border-destructive/30 hover:border-destructive hover:bg-destructive/5 bg-white"
+                                onClick={() => setDeleteTarget(sitemap)}>
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -187,10 +218,17 @@ export default function HistoryPage() {
                           {formatDate(sitemap.createdAt)}
                         </span>
                       </div>
-                      <Button variant="outline" className="w-full"
-                        onClick={() => handleDownload(sitemap.fileName)}>
-                        ダウンロード
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button variant="outline" className="flex-1"
+                          onClick={() => handleDownload(sitemap.fileName)}>
+                          ダウンロード
+                        </Button>
+                        <Button variant="outline"
+                          className="text-destructive hover:text-destructive border-destructive/30 hover:border-destructive hover:bg-destructive/5 bg-white"
+                          onClick={() => setDeleteTarget(sitemap)}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                   <p className="text-center text-sm text-muted-foreground">
@@ -203,6 +241,29 @@ export default function HistoryPage() {
         )}
 
       </main>
+
+      {/* 削除確認モーダル */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => !deleting && setDeleteTarget(null)}>
+          <div className="bg-card rounded-lg border shadow-lg max-w-sm w-full p-6 flex flex-col gap-4"
+            onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-lg font-semibold">履歴を削除しますか？</h2>
+            <p className="text-sm text-muted-foreground">
+              このExcelファイルと履歴データは完全に削除されます。この操作は取り消せません。
+            </p>
+            <p className="text-sm font-medium truncate">{deleteTarget.domain}</p>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setDeleteTarget(null)} disabled={deleting}>
+                キャンセル
+              </Button>
+              <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+                {deleting ? '削除中...' : '削除する'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

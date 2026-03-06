@@ -158,7 +158,7 @@ export default function Home() {
 
       {/* Header */}
       <header className="h-16 bg-card border-b flex items-center justify-between px-8 shrink-0">
-        <span className="text-base font-semibold">ディレクトリマップ生成ツール</span>
+        <Link href="/" className="text-base font-semibold hover:opacity-80 transition-opacity">ディレクトリマップ生成ツール</Link>
         <Link href="/history" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
           <History className="w-4 h-4" /> 履歴
         </Link>
@@ -307,8 +307,10 @@ export default function Home() {
 
       {/* Confirm Dialog */}
       {showConfirmDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="bg-card rounded-xl shadow-lg p-6 max-w-md w-full mx-4 flex flex-col gap-5">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+          onClick={() => setShowConfirmDialog(false)}>
+          <div className="bg-card rounded-xl shadow-lg p-6 max-w-md w-full mx-4 flex flex-col gap-5"
+            onClick={(e) => e.stopPropagation()}>
             <div className="flex flex-col gap-2">
               <h2 className="text-lg font-semibold text-foreground">クロールを開始しますか？</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">

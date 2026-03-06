@@ -191,6 +191,35 @@ export async function readSitemapsData(): Promise<SitemapsData> {
 }
 
 /**
+ * 指定IDの履歴を削除（メタデータ + Excelファイル）
+ */
+export async function deleteSitemapById(id: string): Promise<void> {
+  await ensureDirectories();
+  const data = await readSitemapsData();
+
+  const index = data.sitemaps.findIndex((s) => s.id === id);
+  if (index === -1) {
+    throw new Error('指定されたIDの履歴が見つかりません');
+  }
+
+  const sitemap = data.sitemaps[index];
+
+  // Excelファイルを削除（存在しない場合は無視）
+  try {
+    const filePath = path.join(EXPORTS_DIR, sitemap.fileName);
+    await fs.unlink(filePath);
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== 'ENOENT') {
+      throw err;
+    }
+  }
+
+  // メタデータから削除
+  data.sitemaps.splice(index, 1);
+  await fs.writeFile(METADATA_FILE, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+/**
  * メタデータを追加してsitemaps.jsonを更新
  */
 export async function addSitemapMetadata(

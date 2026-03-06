@@ -3538,7 +3538,7 @@
                   "type": "ref",
                   "ref": "C3KOZ",
                   "x": 24,
-                  "y": 24.019943701668048,
+                  "y": 24.01994370166805,
                   "width": "fill_container",
                   "descendants": {
                     "NEMHS": {
@@ -6613,7 +6613,7 @@
     {
       "type": "frame",
       "id": "rdYPT",
-      "x": 3740,
+      "x": 3773,
       "y": 3786,
       "name": "PC 確認ダイアログ",
       "width": 1280,
@@ -6713,7 +6713,7 @@
     {
       "type": "frame",
       "id": "OVFwm",
-      "x": 5320,
+      "x": 5353,
       "y": 3786,
       "name": "SP 確認ダイアログ",
       "width": 390,
@@ -6816,219 +6816,9 @@
     },
     {
       "type": "frame",
-      "id": "9CyoN",
-      "x": 5810,
-      "y": 3786,
-      "name": "PC ローディング状態",
-      "width": 1280,
-      "height": 900,
-      "fill": "#F8FAFC",
-      "layout": "vertical",
-      "children": [
-        {
-          "type": "frame",
-          "id": "5pNuk",
-          "name": "pcLoadHeader",
-          "width": "fill_container",
-          "height": 64,
-          "fill": "#FFFFFF",
-          "stroke": {
-            "align": "inside",
-            "thickness": {
-              "bottom": 1
-            },
-            "fill": "#E2E8F0"
-          },
-          "padding": [
-            0,
-            32
-          ],
-          "justifyContent": "space_between",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "text",
-              "id": "seViS",
-              "name": "pcLoadHeaderLogo",
-              "fill": "#18181B",
-              "content": "ディレクトリマップ生成ツール",
-              "fontFamily": "Inter",
-              "fontSize": 16,
-              "fontWeight": "600"
-            },
-            {
-              "type": "frame",
-              "id": "PkSjn",
-              "name": "pcLoadHeaderNavPill",
-              "cornerRadius": 6,
-              "gap": 6,
-              "padding": [
-                6,
-                12
-              ],
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "text",
-                  "id": "RURU3",
-                  "name": "pcLoadHeaderNavText",
-                  "fill": "#71717A",
-                  "content": "履歴",
-                  "fontFamily": "Inter",
-                  "fontSize": 14,
-                  "fontWeight": "normal"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "frame",
-          "id": "E7hce",
-          "name": "pcLoadContent",
-          "width": "fill_container",
-          "layout": "vertical",
-          "gap": 16,
-          "padding": [
-            48,
-            32
-          ],
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "frame",
-              "id": "CUosW",
-              "name": "formCard",
-              "width": 640,
-              "fill": "#FFFFFF",
-              "cornerRadius": 8,
-              "stroke": {
-                "align": "inside",
-                "thickness": 1,
-                "fill": "#E2E8F0"
-              },
-              "layout": "vertical",
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "4w6Ow",
-                  "name": "pcLoadCardHeader",
-                  "width": "fill_container",
-                  "stroke": {
-                    "align": "inside",
-                    "thickness": {
-                      "bottom": 1
-                    },
-                    "fill": "#E2E8F0"
-                  },
-                  "layout": "vertical",
-                  "gap": 4,
-                  "padding": [
-                    20,
-                    24
-                  ],
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "eP8zv",
-                      "name": "pcLoadCardHeaderTitle",
-                      "fill": "#18181B",
-                      "content": "クロール設定",
-                      "fontFamily": "Inter",
-                      "fontSize": 20,
-                      "fontWeight": "600"
-                    },
-                    {
-                      "type": "text",
-                      "id": "VXZtQ",
-                      "name": "pcLoadCardHeaderDesc",
-                      "fill": "#71717A",
-                      "content": "対象のURLを入力してクロールを開始します",
-                      "fontFamily": "Inter",
-                      "fontSize": 14,
-                      "fontWeight": "normal"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "Gz8CK",
-                  "name": "pcLoadCardContent",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": 12,
-                  "padding": 24,
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "5zeiY",
-                      "name": "pcLoadCardNote",
-                      "fill": "#A1A1AA",
-                      "content": "https://example.com",
-                      "fontFamily": "Inter",
-                      "fontSize": 14,
-                      "fontWeight": "normal"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "wT8VU",
-                  "name": "pcLoadCardFooter",
-                  "width": "fill_container",
-                  "height": "fit_content(0)",
-                  "layout": "vertical",
-                  "padding": [
-                    12,
-                    24,
-                    20,
-                    24
-                  ],
-                  "children": [
-                    {
-                      "id": "cXRE6",
-                      "type": "ref",
-                      "ref": "VSnC2",
-                      "width": "fill_container",
-                      "enabled": false,
-                      "name": "pcLoadBtnDisabled",
-                      "descendants": {
-                        "8jVfJ": {
-                          "enabled": false
-                        },
-                        "8tnXG": {
-                          "content": "クロール中..."
-                        }
-                      }
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "id": "fSbDZ",
-              "type": "ref",
-              "ref": "QyzNg",
-              "width": 640,
-              "name": "pcLoadAlert",
-              "descendants": {
-                "nbvca": {
-                  "content": "クロール中..."
-                },
-                "W4UBy": {
-                  "content": "サイトをクロールしています。完了まで数分かかる場合があります。ブラウザのタブを閉じないでください。"
-                }
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "frame",
       "id": "j4YOJ",
-      "x": 7190,
-      "y": 3786,
+      "x": 3773,
+      "y": 4515,
       "name": "PC クロール進捗モーダル",
       "width": 1280,
       "height": 600,
@@ -7143,8 +6933,8 @@
     {
       "type": "frame",
       "id": "3PHK9",
-      "x": 8570,
-      "y": 3786,
+      "x": 5353,
+      "y": 4515,
       "name": "SP クロール進捗モーダル",
       "width": 390,
       "height": 600,
