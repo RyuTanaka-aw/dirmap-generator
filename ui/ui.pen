@@ -3538,7 +3538,7 @@
                   "type": "ref",
                   "ref": "C3KOZ",
                   "x": 24,
-                  "y": 24.01994370166805,
+                  "y": 24.019943701668048,
                   "width": "fill_container",
                   "descendants": {
                     "NEMHS": {
@@ -6605,6 +6605,655 @@
               "fontFamily": "Inter",
               "fontSize": 14,
               "fontWeight": "normal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "rdYPT",
+      "x": 3740,
+      "y": 3786,
+      "name": "PC 確認ダイアログ",
+      "width": 1280,
+      "height": 600,
+      "fill": "#0F172A",
+      "layout": "vertical",
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "PpVOh",
+          "name": "confirmDialog",
+          "width": 480,
+          "fill": "#FFFFFF",
+          "cornerRadius": 12,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#E2E8F0"
+          },
+          "layout": "vertical",
+          "gap": 20,
+          "padding": [
+            24,
+            24,
+            20,
+            24
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "2L4kI",
+              "name": "pcDlgCardTitle",
+              "fill": "#18181B",
+              "content": "クロールを開始しますか？",
+              "fontFamily": "Inter",
+              "fontSize": 18,
+              "fontWeight": "600"
+            },
+            {
+              "type": "text",
+              "id": "oIYmA",
+              "name": "pcDlgCardDesc",
+              "fill": "#71717A",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "サイトの規模によっては数分かかる場合があります。クロール中はブラウザのタブを閉じないでください。",
+              "lineHeight": 1.6,
+              "fontFamily": "Inter",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "emVax",
+              "name": "pcDlgActions",
+              "width": "fill_container",
+              "gap": 12,
+              "justifyContent": "end",
+              "alignItems": "center",
+              "children": [
+                {
+                  "id": "mWekc",
+                  "type": "ref",
+                  "ref": "C10zH",
+                  "name": "pcDlgBtnCancel",
+                  "descendants": {
+                    "l8v2I": {
+                      "enabled": false
+                    },
+                    "poRwU": {
+                      "content": "キャンセル"
+                    }
+                  }
+                },
+                {
+                  "id": "tqGUi",
+                  "type": "ref",
+                  "ref": "VSnC2",
+                  "name": "pcDlgBtnStart",
+                  "descendants": {
+                    "8jVfJ": {
+                      "enabled": false
+                    },
+                    "8tnXG": {
+                      "content": "クロール開始"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "OVFwm",
+      "x": 5320,
+      "y": 3786,
+      "name": "SP 確認ダイアログ",
+      "width": 390,
+      "height": 600,
+      "fill": "#0F172A",
+      "layout": "vertical",
+      "padding": [
+        0,
+        16
+      ],
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "eQHyn",
+          "name": "confirmDialog",
+          "width": "fill_container",
+          "fill": "#FFFFFF",
+          "cornerRadius": 12,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#E2E8F0"
+          },
+          "layout": "vertical",
+          "gap": 20,
+          "padding": [
+            20,
+            20,
+            16,
+            20
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "Px4rz",
+              "name": "spDlgCardTitle",
+              "fill": "#18181B",
+              "content": "クロールを開始しますか？",
+              "fontFamily": "Inter",
+              "fontSize": 16,
+              "fontWeight": "600"
+            },
+            {
+              "type": "text",
+              "id": "lAB8n",
+              "name": "spDlgCardDesc",
+              "fill": "#71717A",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "サイトの規模によっては数分かかる場合があります。クロール中はブラウザのタブを閉じないでください。",
+              "lineHeight": 1.6,
+              "fontFamily": "Inter",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "qvaXe",
+              "name": "spDlgActions",
+              "width": "fill_container",
+              "gap": 12,
+              "justifyContent": "end",
+              "alignItems": "center",
+              "children": [
+                {
+                  "id": "ULcbH",
+                  "type": "ref",
+                  "ref": "C10zH",
+                  "name": "spDlgBtnCancel",
+                  "descendants": {
+                    "l8v2I": {
+                      "enabled": false
+                    },
+                    "poRwU": {
+                      "content": "キャンセル"
+                    }
+                  }
+                },
+                {
+                  "id": "j2CEU",
+                  "type": "ref",
+                  "ref": "VSnC2",
+                  "name": "spDlgBtnStart",
+                  "descendants": {
+                    "8jVfJ": {
+                      "enabled": false
+                    },
+                    "8tnXG": {
+                      "content": "クロール開始"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "9CyoN",
+      "x": 5810,
+      "y": 3786,
+      "name": "PC ローディング状態",
+      "width": 1280,
+      "height": 900,
+      "fill": "#F8FAFC",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "5pNuk",
+          "name": "pcLoadHeader",
+          "width": "fill_container",
+          "height": 64,
+          "fill": "#FFFFFF",
+          "stroke": {
+            "align": "inside",
+            "thickness": {
+              "bottom": 1
+            },
+            "fill": "#E2E8F0"
+          },
+          "padding": [
+            0,
+            32
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "seViS",
+              "name": "pcLoadHeaderLogo",
+              "fill": "#18181B",
+              "content": "ディレクトリマップ生成ツール",
+              "fontFamily": "Inter",
+              "fontSize": 16,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "PkSjn",
+              "name": "pcLoadHeaderNavPill",
+              "cornerRadius": 6,
+              "gap": 6,
+              "padding": [
+                6,
+                12
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "RURU3",
+                  "name": "pcLoadHeaderNavText",
+                  "fill": "#71717A",
+                  "content": "履歴",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "E7hce",
+          "name": "pcLoadContent",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 16,
+          "padding": [
+            48,
+            32
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "CUosW",
+              "name": "formCard",
+              "width": 640,
+              "fill": "#FFFFFF",
+              "cornerRadius": 8,
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "#E2E8F0"
+              },
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "4w6Ow",
+                  "name": "pcLoadCardHeader",
+                  "width": "fill_container",
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": {
+                      "bottom": 1
+                    },
+                    "fill": "#E2E8F0"
+                  },
+                  "layout": "vertical",
+                  "gap": 4,
+                  "padding": [
+                    20,
+                    24
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "eP8zv",
+                      "name": "pcLoadCardHeaderTitle",
+                      "fill": "#18181B",
+                      "content": "クロール設定",
+                      "fontFamily": "Inter",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "VXZtQ",
+                      "name": "pcLoadCardHeaderDesc",
+                      "fill": "#71717A",
+                      "content": "対象のURLを入力してクロールを開始します",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Gz8CK",
+                  "name": "pcLoadCardContent",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "padding": 24,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "5zeiY",
+                      "name": "pcLoadCardNote",
+                      "fill": "#A1A1AA",
+                      "content": "https://example.com",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "wT8VU",
+                  "name": "pcLoadCardFooter",
+                  "width": "fill_container",
+                  "height": "fit_content(0)",
+                  "layout": "vertical",
+                  "padding": [
+                    12,
+                    24,
+                    20,
+                    24
+                  ],
+                  "children": [
+                    {
+                      "id": "cXRE6",
+                      "type": "ref",
+                      "ref": "VSnC2",
+                      "width": "fill_container",
+                      "enabled": false,
+                      "name": "pcLoadBtnDisabled",
+                      "descendants": {
+                        "8jVfJ": {
+                          "enabled": false
+                        },
+                        "8tnXG": {
+                          "content": "クロール中..."
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "fSbDZ",
+              "type": "ref",
+              "ref": "QyzNg",
+              "width": 640,
+              "name": "pcLoadAlert",
+              "descendants": {
+                "nbvca": {
+                  "content": "クロール中..."
+                },
+                "W4UBy": {
+                  "content": "サイトをクロールしています。完了まで数分かかる場合があります。ブラウザのタブを閉じないでください。"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "j4YOJ",
+      "x": 7190,
+      "y": 3786,
+      "name": "PC クロール進捗モーダル",
+      "width": 1280,
+      "height": 600,
+      "fill": "#0F172A",
+      "layout": "vertical",
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "DHM9w",
+          "name": "progressCard",
+          "width": 480,
+          "fill": "#FFFFFF",
+          "cornerRadius": 12,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#E2E8F0"
+          },
+          "layout": "vertical",
+          "gap": 24,
+          "padding": 32,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "ellipse",
+              "id": "er59l",
+              "name": "pcSpinner",
+              "fill": "none",
+              "width": 40,
+              "height": 40,
+              "stroke": {
+                "align": "center",
+                "thickness": 3,
+                "fill": "#2563EB"
+              }
+            },
+            {
+              "type": "frame",
+              "id": "K5Zy0",
+              "name": "pcModalTexts",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "o0CZX",
+                  "name": "pcModalTitle",
+                  "fill": "#18181B",
+                  "content": "クロール中...",
+                  "textAlign": "center",
+                  "fontFamily": "Inter",
+                  "fontSize": 20,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "808U9",
+                  "name": "pcModalDesc",
+                  "fill": "#71717A",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "サイトをクロールしています。\n完了まで数分かかる場合があります。",
+                  "lineHeight": 1.6,
+                  "textAlign": "center",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "i3inJ",
+              "name": "pcModalWarn",
+              "width": "fill_container",
+              "fill": "#FFFBEB",
+              "cornerRadius": 8,
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "#FDE68A"
+              },
+              "layout": "vertical",
+              "padding": [
+                12,
+                16
+              ],
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Qyp6j",
+                  "name": "pcModalWarnText",
+                  "fill": "#92400E",
+                  "content": "⚠ このページを閉じると中断されます",
+                  "textAlign": "center",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "500"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "3PHK9",
+      "x": 8570,
+      "y": 3786,
+      "name": "SP クロール進捗モーダル",
+      "width": 390,
+      "height": 600,
+      "fill": "#0F172A",
+      "layout": "vertical",
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "ndpBZ",
+          "name": "spProgressCard",
+          "width": 342,
+          "fill": "#FFFFFF",
+          "cornerRadius": 12,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#E2E8F0"
+          },
+          "layout": "vertical",
+          "gap": 20,
+          "padding": [
+            28,
+            24
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "ellipse",
+              "id": "dhwbA",
+              "name": "spSpinner",
+              "fill": "none",
+              "width": 36,
+              "height": 36,
+              "stroke": {
+                "align": "center",
+                "thickness": 3,
+                "fill": "#2563EB"
+              }
+            },
+            {
+              "type": "frame",
+              "id": "OVys5",
+              "name": "spModalTexts",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "PmoOd",
+                  "name": "spModalTitle",
+                  "fill": "#18181B",
+                  "content": "クロール中...",
+                  "textAlign": "center",
+                  "fontFamily": "Inter",
+                  "fontSize": 18,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "onrY7",
+                  "name": "spModalDesc",
+                  "fill": "#71717A",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "サイトをクロールしています。\n完了まで数分かかる場合があります。",
+                  "lineHeight": 1.6,
+                  "textAlign": "center",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "IIm4c",
+              "name": "spModalWarn",
+              "width": "fill_container",
+              "fill": "#FFFBEB",
+              "cornerRadius": 8,
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "#FDE68A"
+              },
+              "layout": "vertical",
+              "padding": [
+                10,
+                14
+              ],
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "X8eax",
+                  "name": "spModalWarnText",
+                  "fill": "#92400E",
+                  "content": "⚠ このページを閉じると中断されます",
+                  "textAlign": "center",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "500"
+                }
+              ]
             }
           ]
         }

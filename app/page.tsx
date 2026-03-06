@@ -1,14 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { History, CircleCheck } from 'lucide-react';
+import { History, CircleCheck, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface CrawlResult {
   url: string;
@@ -29,10 +29,27 @@ export default function Home() {
   const [excludePatterns, setExcludePatterns] = useState('');
   const [includeDirectoryColumns, setIncludeDirectoryColumns] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [result, setResult] = useState<CrawlResult | null>(null);
   const [completedAt, setCompletedAt] = useState<string>('');
   const [savedFileName, setSavedFileName] = useState<string>('');
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (loading) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [loading]);
+
+  const handleConfirmCrawl = () => {
+    setShowConfirmDialog(false);
+    handleCrawl();
+  };
 
   const formatDate = (isoString: string) => {
     const date = new Date(isoString);
@@ -217,11 +234,12 @@ export default function Home() {
 
             </CardContent>
             <CardFooter>
-              <Button className="w-full" onClick={handleCrawl} disabled={loading || !url}>
+              <Button className="w-full" onClick={() => setShowConfirmDialog(true)} disabled={loading || !url}>
                 {loading ? 'クロール中...' : 'クロール開始'}
               </Button>
             </CardFooter>
           </Card>
+
 
           {/* Error Alert */}
           {error && (
@@ -268,6 +286,42 @@ export default function Home() {
 
         </div>
       </main>
+
+      {/* Crawl Progress Modal */}
+      {loading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/95">
+          <div className="bg-card rounded-xl shadow-lg p-8 max-w-md w-full mx-4 flex flex-col items-center gap-6 text-center">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            <div className="flex flex-col gap-2">
+              <h2 className="text-xl font-semibold text-foreground">クロール中...</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                サイトをクロールしています。<br />完了まで数分かかる場合があります。
+              </p>
+            </div>
+            <div className="w-full rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800 font-medium">
+              ⚠ このページを閉じると中断されます
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Dialog */}
+      {showConfirmDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-card rounded-xl shadow-lg p-6 max-w-md w-full mx-4 flex flex-col gap-5">
+            <div className="flex flex-col gap-2">
+              <h2 className="text-lg font-semibold text-foreground">クロールを開始しますか？</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                サイトの規模によっては数分かかる場合があります。クロール中はブラウザのタブを閉じないでください。
+              </p>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" onClick={() => setShowConfirmDialog(false)}>キャンセル</Button>
+              <Button onClick={handleConfirmCrawl}>クロール開始</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
