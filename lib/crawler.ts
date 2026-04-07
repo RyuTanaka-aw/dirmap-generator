@@ -523,6 +523,48 @@ export function buildHierarchy(
     });
   }
 
+  // クロールされなかった中間ディレクトリの合成ノードを生成
+  const syntheticUrls: string[] = [];
+  for (const url of [...urlArray]) {
+    try {
+      const urlObj = new URL(url);
+      const pathParts = urlObj.pathname.split('/').filter(p => p !== '');
+
+      for (let i = 1; i < pathParts.length; i++) {
+        const intermediatePath = '/' + pathParts.slice(0, i).join('/');
+        const intermediateUrl = urlObj.origin + intermediatePath;
+
+        if (existingUrls.has(intermediateUrl) || existingUrls.has(intermediateUrl + '/')) {
+          continue;
+        }
+
+        const depth = getUrlDepth(intermediateUrl) - rootDepth;
+        const dirName = pathParts[i - 1];
+        nodeMap.set(intermediateUrl, {
+          url: intermediateUrl,
+          title: dirName,
+          description: '',
+          depth,
+          children: []
+        });
+        existingUrls.add(intermediateUrl);
+        syntheticUrls.push(intermediateUrl);
+      }
+    } catch {
+      // malformed URL はスキップ
+    }
+  }
+
+  if (syntheticUrls.length > 0) {
+    urlArray.push(...syntheticUrls);
+    urlArray.sort((a, b) => {
+      const depthA = getUrlDepth(a);
+      const depthB = getUrlDepth(b);
+      if (depthA !== depthB) return depthA - depthB;
+      return a.localeCompare(b);
+    });
+  }
+
   // ルートURLを正規化
   let normalizedRootUrl = rootUrl;
   if (!nodeMap.has(normalizedRootUrl)) {
