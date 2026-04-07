@@ -214,6 +214,27 @@ async function finalizeJobSuccess(jobId: string): Promise<void> {
   }
 }
 
+async function detectFirstPageError(jobId: string): Promise<string> {
+  try {
+    const content = await fs.readFile(getEventsFilePath(jobId), 'utf-8');
+    for (const line of content.split('\n')) {
+      if (!line.trim()) continue;
+      const event = JSON.parse(line) as { type: string; error?: string };
+      if (event.type === 'page_error' && event.error) {
+        if (event.error.includes('403')) {
+          return '対象サーバーによりアクセスが拒否されました。クローラーのアクセスがブロックされている可能性があります。';
+        }
+        if (event.error.includes('401') || event.error.includes('認証に失敗')) {
+          return '認証に失敗しました。ユーザー名とパスワードを確認してください。';
+        }
+      }
+    }
+  } catch {
+    // events.ndjson が読めない場合は汎用メッセージ
+  }
+  return 'クロールに成功したページがありませんでした';
+}
+
 async function failJob(jobId: string, errorMessage: string): Promise<void> {
   await updateJob(jobId, (currentJob) => ({
     ...currentJob,
@@ -274,7 +295,15 @@ async function runJob(jobId: string): Promise<void> {
       }
     );
 
-    await finalizeJobSuccess(jobId);
+    const finalJob = await readJob(jobId);
+    const successCount = (finalJob?.visitedCount ?? 0) - (finalJob?.failedCount ?? 0);
+
+    if (successCount <= 0) {
+      const failMessage = await detectFirstPageError(jobId);
+      await failJob(jobId, failMessage);
+    } else {
+      await finalizeJobSuccess(jobId);
+    }
   } finally {
     activeJobIds.delete(jobId);
   }

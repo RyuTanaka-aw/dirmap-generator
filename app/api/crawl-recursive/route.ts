@@ -66,8 +66,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       error: isAuthError
         ? 'Basic認証に失敗しました。ユーザー名とパスワードを確認してください。'
-        : 'クロールに失敗しました',
-      details: errorMessage
+        : 'クロールに失敗しました'
     }, { status: isAuthError ? 401 : 500 });
   }
 }

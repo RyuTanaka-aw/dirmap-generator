@@ -142,7 +142,7 @@ export default function Home() {
         };
 
         if (!response.ok) {
-          throw new Error(payload.error || payload.details || 'ジョブ状態の取得に失敗しました');
+          throw new Error(payload.error || 'エラーが発生しました');
         }
 
         if (cancelled) {
@@ -219,7 +219,7 @@ export default function Home() {
       }
 
       if (!response.ok || !payload.jobId) {
-        throw new Error(payload.error || payload.details || 'クロールジョブの作成に失敗しました');
+        throw new Error(payload.error || 'エラーが発生しました');
       }
 
       setJobId(payload.jobId);
@@ -254,8 +254,8 @@ export default function Home() {
       anchor.click();
       window.URL.revokeObjectURL(downloadUrl);
       document.body.removeChild(anchor);
-    } catch (downloadError) {
-      alert(downloadError instanceof Error ? downloadError.message : 'Excelのダウンロードに失敗しました');
+    } catch {
+      alert('Excelのダウンロードに失敗しました');
     }
   };
 
@@ -427,7 +427,7 @@ export default function Home() {
                 {job.artifactError && (
                   <Alert>
                     <AlertDescription>
-                      Excel生成に失敗しました。クロール自体は完了しています。詳細: {job.artifactError}
+                      Excel生成に失敗しました。クロール自体は完了しています。
                     </AlertDescription>
                   </Alert>
                 )}

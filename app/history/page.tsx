@@ -32,7 +32,7 @@ export default function HistoryPage() {
         setSitemaps(data.sitemaps);
         setFilteredSitemaps(data.sitemaps);
       } catch (err) {
-        setError(err instanceof Error ? err.message : '不明なエラーが発生しました');
+        setError('データの取得に失敗しました');
       } finally {
         setLoading(false);
       }
@@ -74,8 +74,8 @@ export default function HistoryPage() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch (err) {
-      alert(err instanceof Error ? err.message : 'ダウンロードに失敗しました');
+    } catch {
+      alert('ダウンロードに失敗しました');
     }
   };
 
@@ -88,13 +88,12 @@ export default function HistoryPage() {
         method: 'DELETE',
       });
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || '削除に失敗しました');
+        throw new Error('削除に失敗しました');
       }
       setSitemaps((prev) => prev.filter((s) => s.id !== deleteTarget.id));
       setDeleteTarget(null);
-    } catch (err) {
-      alert(err instanceof Error ? err.message : '削除に失敗しました');
+    } catch {
+      alert('削除に失敗しました');
     } finally {
       setDeleting(false);
     }
