@@ -1,4 +1,5 @@
 import { parseHTML } from 'linkedom';
+import type { CrawlResult } from '@/lib/types';
 
 /**
  * クロスプラットフォーム対応のBase64エンコード（非ASCII文字対応）
@@ -14,8 +15,11 @@ function encodeBase64(input: string): string {
 }
 
 const MAX_REDIRECTS = 5;
-const MAX_PAGES = 1000;  // 最大ページ数制限
-const MAX_CRAWL_DURATION_MS = 5 * 60 * 1000;  // 最大5分
+const MAX_PAGES = 5000;  // 最大ページ数制限
+const MAX_CRAWL_DURATION_MS = 30 * 60 * 1000;  // 最大30分
+const REQUEST_INTERVAL_MS = 300;  // リクエスト間隔
+const MAX_429_RETRIES = 3;  // 429リトライ上限
+const INITIAL_BACKOFF_MS = 1000;  // 初回バックオフ
 
 export interface CrawlOptions {
   url: string;
@@ -30,12 +34,21 @@ export interface PageInfo {
   description: string;
 }
 
-export interface CrawlResult {
-  url: string;
-  title: string;
-  description: string;
-  depth: number;
-  children: CrawlResult[];
+export interface CrawlProgressEvent {
+  visitedCount: number;
+  queuedCount: number;
+  failedCount: number;
+  lastProcessedUrl: string;
+}
+
+export interface CrawlRuntimeCallbacks {
+  onPage?: (page: PageInfo) => Promise<void> | void;
+  onError?: (url: string, errorMessage: string) => Promise<void> | void;
+  onProgress?: (event: CrawlProgressEvent) => Promise<void> | void;
+}
+
+export interface CrawlExecutionOptions extends CrawlRuntimeCallbacks {
+  collectPages?: boolean;
 }
 
 /**
@@ -49,7 +62,7 @@ export function getUrlDepth(url: string): number {
     const urlObj = new URL(url);
     const pathParts = urlObj.pathname.split('/').filter(p => p !== '');
     return pathParts.length;
-  } catch (error) {
+  } catch {
     return 0;
   }
 }
@@ -82,7 +95,7 @@ export function normalizeUrl(baseUrl: string, href: string): string | null {
     }
 
     return normalized;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -95,7 +108,7 @@ export function isSameDomain(baseUrl: string, targetUrl: string): boolean {
     const base = new URL(baseUrl);
     const target = new URL(targetUrl);
     return base.hostname === target.hostname;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -149,12 +162,13 @@ export function isHtmlContentType(contentType: string | undefined): boolean {
 }
 
 /**
- * 単一ページのクロール
+ * 単一ページのクロール（内部・リトライ対応）
  */
-export async function crawlPage(
+async function crawlPageWithRetry(
   url: string,
   username?: string,
-  password?: string
+  password?: string,
+  retryCount = 0
 ): Promise<{ title: string; description: string; links: string[] }> {
   const headers: Record<string, string> = {
     'User-Agent': 'SitemapCrawler/1.0'
@@ -206,6 +220,20 @@ export async function crawlPage(
       throw new Error('レスポンスを受信できませんでした');
     }
 
+    // 429: Retry-After を尊重してリトライ
+    if (response.status === 429) {
+      if (retryCount >= MAX_429_RETRIES) {
+        throw new Error(`HTTP 429`);
+      }
+      const retryAfterHeader = response.headers.get('Retry-After');
+      const retryAfterSec = retryAfterHeader ? parseInt(retryAfterHeader, 10) : 0;
+      const waitMs = Number.isFinite(retryAfterSec) && retryAfterSec > 0
+        ? retryAfterSec * 1000
+        : INITIAL_BACKOFF_MS * Math.pow(2, retryCount);
+      await new Promise(resolve => setTimeout(resolve, waitMs));
+      return crawlPageWithRetry(url, username, password, retryCount + 1);
+    }
+
     if (!response.ok) {
       if (response.status === 401) {
         throw new Error('認証に失敗しました (HTTP 401)。ユーザー名とパスワードを確認してください。');
@@ -251,11 +279,23 @@ export async function crawlPage(
 }
 
 /**
+ * 単一ページのクロール（公開API）
+ */
+export async function crawlPage(
+  url: string,
+  username?: string,
+  password?: string
+): Promise<{ title: string; description: string; links: string[] }> {
+  return crawlPageWithRetry(url, username, password, 0);
+}
+
+/**
  * サイト全体をクロールして全URLを収集（フラットリスト）
  */
 export async function crawlSiteFlat(
   startUrl: string,
-  options: CrawlOptions
+  options: CrawlOptions,
+  executionOptions: CrawlExecutionOptions = {}
 ): Promise<Map<string, PageInfo>> {
   const {
     username,
@@ -263,10 +303,12 @@ export async function crawlSiteFlat(
     excludePatterns = []
   } = options;
 
+  const { collectPages = true } = executionOptions;
   const visited = new Set<string>();
   const pages = new Map<string, PageInfo>();
   const queue: string[] = [startUrl];
   const startTime = Date.now();  // 開始時刻を記録
+  let failedCount = 0;
 
   while (queue.length > 0) {
     const currentUrl = queue.shift()!;
@@ -305,7 +347,11 @@ export async function crawlSiteFlat(
       console.log(`クロール中: ${currentUrl}`);
       const { title, description, links } = await crawlPage(currentUrl, username, password);
 
-      pages.set(currentUrl, { url: currentUrl, title, description });
+      const pageInfo = { url: currentUrl, title, description };
+      if (collectPages) {
+        pages.set(currentUrl, pageInfo);
+      }
+      await executionOptions.onPage?.(pageInfo);
 
       // 同一ドメインのリンクをキューに追加
       for (const link of links) {
@@ -314,14 +360,33 @@ export async function crawlSiteFlat(
         }
       }
 
-      // サーバーへの負荷を考慮して少し待機
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await executionOptions.onProgress?.({
+        visitedCount: visited.size,
+        queuedCount: queue.length,
+        failedCount,
+        lastProcessedUrl: currentUrl
+      });
+
+      // サーバーへの負荷を考慮して待機
+      await new Promise(resolve => setTimeout(resolve, REQUEST_INTERVAL_MS));
 
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error(`クロール失敗: ${currentUrl}`, errorMessage);
       // エラーが発生してもページ情報は保存（エラー詳細を含む）
-      pages.set(currentUrl, { url: currentUrl, title: `Error: ${errorMessage}`, description: '' });
+      const pageInfo = { url: currentUrl, title: `Error: ${errorMessage}`, description: '' };
+      if (collectPages) {
+        pages.set(currentUrl, pageInfo);
+      }
+      failedCount += 1;
+      await executionOptions.onError?.(currentUrl, errorMessage);
+      await executionOptions.onPage?.(pageInfo);
+      await executionOptions.onProgress?.({
+        visitedCount: visited.size,
+        queuedCount: queue.length,
+        failedCount,
+        lastProcessedUrl: currentUrl
+      });
     }
   }
 
@@ -374,7 +439,7 @@ function isDirectChild(parentUrl: string, childUrl: string): boolean {
     const parts = remainder.split('/').filter(p => p !== '');
     return parts.length === 1;
 
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -416,7 +481,7 @@ function findClosestAncestor(
     }
 
     return rootUrl;
-  } catch (error) {
+  } catch {
     return rootUrl;
   }
 }

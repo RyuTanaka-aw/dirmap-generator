@@ -1,24 +1,85 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { History, CircleCheck, Loader2 } from 'lucide-react';
+import { History, CircleCheck, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-
-interface CrawlResult {
-  url: string;
-  title: string;
-  description: string;
-  depth: number;
-  children: CrawlResult[];
-}
+import type { CrawlArtifactStatus, CrawlJobDetail, CrawlJobStatus } from '@/lib/types';
 
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
+const ACTIVE_JOB_STORAGE_KEY = 'dirmap-active-job-id';
+
+interface CrawlJobStartResponse {
+  jobId: string;
+  status: CrawlJobStatus;
+  createdAt: string;
+}
+
+function formatDate(isoString?: string) {
+  if (!isoString) {
+    return '-';
+  }
+
+  const date = new Date(isoString);
+  return date.toLocaleString('ja-JP', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+async function readApiPayload(response: Response): Promise<unknown> {
+  const contentType = response.headers.get('content-type') ?? '';
+
+  if (contentType.includes('application/json')) {
+    return response.json();
+  }
+
+  const text = await response.text();
+  return {
+    error: text.includes('<html') ? 'サーバーがHTMLエラーページを返しました' : 'サーバーが非JSONレスポンスを返しました',
+    details: text || 'レスポンス本文が空でした'
+  };
+}
+
+function isOpenJob(job: CrawlJobDetail | null): boolean {
+  return job?.status === 'queued' || job?.status === 'running';
+}
+
+function getStatusLabel(status?: CrawlJobStatus): string {
+  switch (status) {
+    case 'queued':
+      return '待機中';
+    case 'running':
+      return '実行中';
+    case 'completed':
+      return '完了';
+    case 'failed':
+      return '失敗';
+    default:
+      return '-';
+  }
+}
+
+function getArtifactLabel(status?: CrawlArtifactStatus): string {
+  switch (status) {
+    case 'pending':
+      return '未生成';
+    case 'ready':
+      return '生成完了';
+    case 'failed':
+      return '生成失敗';
+    default:
+      return '-';
+  }
+}
 
 export default function Home() {
   const [url, setUrl] = useState('');
@@ -28,49 +89,109 @@ export default function Home() {
   const [useAuth, setUseAuth] = useState(false);
   const [excludePatterns, setExcludePatterns] = useState('');
   const [includeDirectoryColumns, setIncludeDirectoryColumns] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [result, setResult] = useState<CrawlResult | null>(null);
-  const [completedAt, setCompletedAt] = useState<string>('');
-  const [savedFileName, setSavedFileName] = useState<string>('');
+  const [jobId, setJobId] = useState<string | null>(null);
+  const [job, setJob] = useState<CrawlJobDetail | null>(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (loading) {
-        e.preventDefault();
-        e.returnValue = '';
-      }
+    const storedJobId = window.localStorage.getItem(ACTIVE_JOB_STORAGE_KEY);
+    if (storedJobId) {
+      setJobId(storedJobId);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!jobId) {
+      return;
+    }
+
+    window.localStorage.setItem(ACTIVE_JOB_STORAGE_KEY, jobId);
+  }, [jobId]);
+
+  useEffect(() => {
+    if (!isOpenJob(job)) {
+      return;
+    }
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
     };
+
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [loading]);
+  }, [job]);
+
+  useEffect(() => {
+    if (!jobId) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const pollJob = async () => {
+      try {
+        const response = await fetch(`${BASE_PATH}/api/crawl-jobs/${jobId}`, {
+          cache: 'no-store'
+        });
+        const payload = await readApiPayload(response) as Partial<CrawlJobDetail> & {
+          error?: string;
+          details?: string;
+        };
+
+        if (!response.ok) {
+          throw new Error(payload.error || payload.details || 'ジョブ状態の取得に失敗しました');
+        }
+
+        if (cancelled) {
+          return;
+        }
+
+        setJob(payload as CrawlJobDetail);
+        setError('');
+
+        if (payload.status === 'completed' || payload.status === 'failed') {
+          window.localStorage.removeItem(ACTIVE_JOB_STORAGE_KEY);
+          cancelled = true;
+        }
+      } catch (pollError) {
+        if (cancelled) {
+          return;
+        }
+
+        const message = pollError instanceof Error ? pollError.message : 'ジョブ状態の取得に失敗しました';
+        setError(message);
+      }
+    };
+
+    void pollJob();
+
+    const intervalId = window.setInterval(() => {
+      if (!cancelled) {
+        void pollJob();
+      }
+    }, 2000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [jobId]);
 
   const handleConfirmCrawl = () => {
     setShowConfirmDialog(false);
-    handleCrawl();
-  };
-
-  const formatDate = (isoString: string) => {
-    const date = new Date(isoString);
-    return date.toLocaleString('ja-JP', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    void handleCrawl();
   };
 
   const handleCrawl = async () => {
-    setLoading(true);
+    setSubmitting(true);
     setError('');
-    setResult(null);
-    setCompletedAt('');
-    setSavedFileName('');
+    setJob(null);
 
     try {
-      const response = await fetch(`${BASE_PATH}/api/crawl-recursive`, {
+      const response = await fetch(`${BASE_PATH}/api/crawl-jobs`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -79,84 +200,67 @@ export default function Home() {
           url,
           username: useAuth ? username : undefined,
           password: useAuth ? password : undefined,
-          excludePatterns: excludePatterns.split(',').map(p => p.trim()).filter(Boolean),
+          excludePatterns: excludePatterns.split(',').map((pattern) => pattern.trim()).filter(Boolean),
           includeDirectoryColumns,
           devDomain: devDomain || undefined
         }),
       });
 
-      const data = await response.json();
+      const payload = await readApiPayload(response) as Partial<CrawlJobStartResponse> & {
+        error?: string;
+        details?: string;
+        activeJobId?: string;
+      };
 
-      if (!response.ok) {
-        throw new Error(data.error || 'クロールに失敗しました');
+      if (response.status === 409 && payload.activeJobId) {
+        setJobId(payload.activeJobId);
+        setError(payload.error || '別のクロールジョブが実行中です');
+        return;
       }
 
-      setResult(data.result);
-      setCompletedAt(data.completedAt);
-
-      if (data.savedFileName) {
-        console.log('サーバーに自動保存されました:', data.savedFileName);
-        setSavedFileName(data.savedFileName);
+      if (!response.ok || !payload.jobId) {
+        throw new Error(payload.error || payload.details || 'クロールジョブの作成に失敗しました');
       }
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+
+      setJobId(payload.jobId);
+    } catch (requestError: unknown) {
+      const errorMessage = requestError instanceof Error ? requestError.message : 'Unknown error';
       setError(errorMessage);
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
   const handleExportToExcel = async () => {
-    if (!result) {
-      alert('クロール結果がありません');
-      return;
-    }
-
-    if (!savedFileName) {
+    if (!job?.resultFileName) {
       alert('保存されたファイルが見つかりません');
       return;
     }
 
     try {
-      // 既存の保存済みファイルをダウンロード
-      const response = await fetch(`${BASE_PATH}/api/download/${savedFileName}`);
+      const response = await fetch(`${BASE_PATH}/api/download/${job.resultFileName}`);
 
       if (!response.ok) {
-        throw new Error('ファイルのダウンロードに失敗しました');
+        const payload = await readApiPayload(response) as { error?: string };
+        throw new Error(payload.error || 'ファイルのダウンロードに失敗しました');
       }
 
       const blob = await response.blob();
       const downloadUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = downloadUrl;
-      a.download = savedFileName; // 正しいファイル名を使用
-      document.body.appendChild(a);
-      a.click();
+      const anchor = document.createElement('a');
+      anchor.href = downloadUrl;
+      anchor.download = job.resultFileName;
+      document.body.appendChild(anchor);
+      anchor.click();
       window.URL.revokeObjectURL(downloadUrl);
-      document.body.removeChild(a);
-
-      alert('Excelファイルのダウンロードが完了しました!');
-    } catch (error) {
-      console.error('ダウンロードエラー:', error);
-      alert('Excelのダウンロードに失敗しました');
+      document.body.removeChild(anchor);
+    } catch (downloadError) {
+      alert(downloadError instanceof Error ? downloadError.message : 'Excelのダウンロードに失敗しました');
     }
-  };
-
-  // URL数を再帰的にカウント
-  const countUrls = (node: CrawlResult): number => {
-    let count = 1;
-    if (node.children) {
-      for (const child of node.children) {
-        count += countUrls(child);
-      }
-    }
-    return count;
   };
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-
-      {/* Header */}
       <header className="h-16 bg-card border-b flex items-center justify-between px-8 shrink-0">
         <Link href="/" className="text-base font-semibold hover:opacity-80 transition-opacity">ディレクトリマップ生成ツール</Link>
         <Link href="/history" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
@@ -166,155 +270,195 @@ export default function Home() {
 
       <main className="flex-1 flex flex-col items-center py-12 px-4 md:px-8">
         <div className="w-full max-w-[640px] flex flex-col gap-6">
-
-          {/* Form Card */}
           <Card>
             <CardHeader>
               <CardTitle>クロール設定</CardTitle>
               <CardDescription>
-                <span className="hidden md:inline">対象のURLを入力してクロールを開始します</span>
-                <span className="md:hidden">クロールするWebサイトの設定を入力してください</span>
+                対象URLを指定すると、バックグラウンドジョブとしてクロールを開始します。
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
-
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="url">対象URL</Label>
-                <Input id="url" value={url} onChange={(e) => setUrl(e.target.value)}
-                  placeholder="https://example.com" />
+                <Input
+                  id="url"
+                  value={url}
+                  onChange={(event) => setUrl(event.target.value)}
+                  placeholder="https://example.com"
+                />
               </div>
 
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="devDomain">開発環境URL（任意）</Label>
-                <Input id="devDomain" value={devDomain} onChange={(e) => setDevDomain(e.target.value)}
-                  placeholder="http://localhost:3000" />
+                <Input
+                  id="devDomain"
+                  value={devDomain}
+                  onChange={(event) => setDevDomain(event.target.value)}
+                  placeholder="http://localhost:3000"
+                />
               </div>
 
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="excludePatterns">除外パターン（任意）</Label>
-                <Input id="excludePatterns" value={excludePatterns}
-                  onChange={(e) => setExcludePatterns(e.target.value)}
-                  placeholder="/admin/, /api/" />
+                <Input
+                  id="excludePatterns"
+                  value={excludePatterns}
+                  onChange={(event) => setExcludePatterns(event.target.value)}
+                  placeholder="/admin/, /api/"
+                />
               </div>
 
-              {/* Basic認証チェックボックス */}
               <div className="flex items-center gap-2">
-                <Checkbox id="useAuth" checked={useAuth} onCheckedChange={(c) => setUseAuth(!!c)} />
-                <Label htmlFor="useAuth" className="font-medium cursor-pointer">
-                  <span className="hidden md:inline">Basic認証が必要</span>
-                  <span className="md:hidden">Basic認証を使用する</span>
-                </Label>
+                <Checkbox id="useAuth" checked={useAuth} onCheckedChange={(checked) => setUseAuth(Boolean(checked))} />
+                <Label htmlFor="useAuth" className="font-medium cursor-pointer">Basic認証が必要</Label>
               </div>
 
-              {/* 認証フィールド（条件付き表示） */}
               {useAuth && (
                 <div className="flex flex-col md:flex-row gap-4 pl-6 border-l-2 border-border">
                   <div className="flex flex-col gap-1.5 flex-1">
                     <Label htmlFor="username">ユーザー名</Label>
-                    <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)}
-                      placeholder="username" />
+                    <Input
+                      id="username"
+                      value={username}
+                      onChange={(event) => setUsername(event.target.value)}
+                      placeholder="username"
+                    />
                   </div>
                   <div className="flex flex-col gap-1.5 flex-1">
                     <Label htmlFor="password">パスワード</Label>
-                    <Input id="password" type="password" value={password}
-                      onChange={(e) => setPassword(e.target.value)} placeholder="password" />
+                    <Input
+                      id="password"
+                      type="password"
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      placeholder="password"
+                    />
                   </div>
                 </div>
               )}
 
-              {/* ディレクトリパスチェックボックス */}
               <div className="flex items-center gap-2">
-                <Checkbox id="includeDir" checked={includeDirectoryColumns}
-                  onCheckedChange={(c) => setIncludeDirectoryColumns(!!c)} />
+                <Checkbox
+                  id="includeDir"
+                  checked={includeDirectoryColumns}
+                  onCheckedChange={(checked) => setIncludeDirectoryColumns(Boolean(checked))}
+                />
                 <Label htmlFor="includeDir" className="font-medium cursor-pointer">
-                  <span className="hidden md:inline">ディレクトリパス列を追加</span>
-                  <span className="md:hidden">ディレクトリパスを含める</span>
+                  ディレクトリパス列を追加
                 </Label>
               </div>
-
             </CardContent>
             <CardFooter>
-              <Button className="w-full" onClick={() => setShowConfirmDialog(true)} disabled={loading || !url}>
-                {loading ? 'クロール中...' : 'クロール開始'}
+              <Button
+                className="w-full"
+                onClick={() => setShowConfirmDialog(true)}
+                disabled={submitting || isOpenJob(job) || !url}
+              >
+                {submitting ? 'ジョブ作成中...' : 'クロール開始'}
               </Button>
             </CardFooter>
           </Card>
 
-
-          {/* Error Alert */}
           {error && (
             <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>エラー</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
 
-          {/* Result Card */}
-          {result && (
+          {job && (
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-2">
-                  <CircleCheck className="w-5 h-5 text-primary" />
-                  <CardTitle>クロールが完了しました</CardTitle>
+                  {isOpenJob(job) ? (
+                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                  ) : (
+                    <CircleCheck className="w-5 h-5 text-primary" />
+                  )}
+                  <CardTitle>クロールジョブ</CardTitle>
                 </div>
+                <CardDescription>
+                  ジョブID: {job.id}
+                </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col gap-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">ルートURL</span>
-                  <span className="font-medium break-all text-right max-w-[60%]">{result.url}</span>
+                <div className="flex items-center justify-between text-sm gap-4">
+                  <span className="text-muted-foreground">対象URL</span>
+                  <span className="font-medium break-all text-right max-w-[70%]">{job.requestedUrl}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    <span className="hidden md:inline">総URL数</span>
-                    <span className="md:hidden">URLページ数</span>
-                  </span>
-                  <span className="font-medium text-primary">{countUrls(result)}ページ</span>
+                  <span className="text-muted-foreground">状態</span>
+                  <span className="font-medium">{getStatusLabel(job.status)}</span>
                 </div>
-                {completedAt && (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">完了時刻</span>
-                    <span className="font-medium">{formatDate(completedAt)}</span>
-                  </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">成果物</span>
+                  <span className="font-medium">{getArtifactLabel(job.artifactStatus)}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">進捗率</span>
+                  <span className="font-medium text-primary">{job.progressPercent}%</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">訪問済みページ数</span>
+                  <span className="font-medium">{job.visitedCount}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">キュー残数</span>
+                  <span className="font-medium">{job.queuedCount}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">失敗数</span>
+                  <span className="font-medium">{job.failedCount}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm gap-4">
+                  <span className="text-muted-foreground">処理中 / 最終URL</span>
+                  <span className="font-medium break-all text-right max-w-[70%]">{job.lastProcessedUrl || '-'}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">完了時刻</span>
+                  <span className="font-medium">{formatDate(job.completedAt)}</span>
+                </div>
+                {job.error && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{job.error}</AlertDescription>
+                  </Alert>
+                )}
+                {job.artifactError && (
+                  <Alert>
+                    <AlertDescription>
+                      Excel生成に失敗しました。クロール自体は完了しています。詳細: {job.artifactError}
+                    </AlertDescription>
+                  </Alert>
                 )}
               </CardContent>
               <CardFooter>
-                <Button className="w-full" onClick={handleExportToExcel}>
+                <Button
+                  className="w-full"
+                  onClick={handleExportToExcel}
+                  disabled={job.status !== 'completed' || job.artifactStatus !== 'ready' || !job.resultFileName}
+                >
                   Excelファイルをダウンロード
                 </Button>
               </CardFooter>
             </Card>
           )}
-
         </div>
       </main>
 
-      {/* Crawl Progress Modal */}
-      {loading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/95">
-          <div className="bg-card rounded-xl shadow-lg p-8 max-w-md w-full mx-4 flex flex-col items-center gap-6 text-center">
-            <Loader2 className="h-10 w-10 animate-spin text-primary" />
-            <div className="flex flex-col gap-2">
-              <h2 className="text-xl font-semibold text-foreground">クロール中...</h2>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                サイトをクロールしています。<br />完了まで数分かかる場合があります。
-              </p>
-            </div>
-            <div className="w-full rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800 font-medium">
-              ⚠ このページを閉じると中断されます
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Confirm Dialog */}
       {showConfirmDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
-          onClick={() => setShowConfirmDialog(false)}>
-          <div className="bg-card rounded-xl shadow-lg p-6 max-w-md w-full mx-4 flex flex-col gap-5"
-            onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+          onClick={() => setShowConfirmDialog(false)}
+        >
+          <div
+            className="bg-card rounded-xl shadow-lg p-6 max-w-md w-full mx-4 flex flex-col gap-5"
+            onClick={(event) => event.stopPropagation()}
+          >
             <div className="flex flex-col gap-2">
               <h2 className="text-lg font-semibold text-foreground">クロールを開始しますか？</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                サイトの規模によっては数分かかる場合があります。クロール中はブラウザのタブを閉じないでください。
+                開始後はバックグラウンドジョブとして進行します。進捗はこの画面で確認できます。
               </p>
             </div>
             <div className="flex gap-3 justify-end">

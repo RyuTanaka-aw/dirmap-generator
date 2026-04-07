@@ -9,6 +9,39 @@ export interface CrawlResult {
   completed_at?: string;
 }
 
+export interface CrawlRequest {
+  url: string;
+  username?: string;
+  password?: string;
+  excludePatterns?: string[];
+  includeDirectoryColumns?: boolean;
+  devDomain?: string;
+}
+
+export type CrawlJobStatus = 'queued' | 'running' | 'completed' | 'failed';
+
+export type CrawlArtifactStatus = 'pending' | 'ready' | 'failed';
+
+export interface CrawlJobDetail {
+  id: string;
+  status: CrawlJobStatus;
+  artifactStatus: CrawlArtifactStatus;
+  requestedUrl: string;
+  createdAt: string;
+  startedAt?: string;
+  updatedAt: string;
+  completedAt?: string;
+  visitedCount: number;
+  queuedCount: number;
+  failedCount: number;
+  progressPercent: number;
+  lastProcessedUrl?: string;
+  resultFileName?: string;
+  artifactError?: string;
+  error?: string;
+  options: CrawlRequest;
+}
+
 export interface SitemapMetadata {
   id: string;                      // UUID
   domain: string;                  // 元のドメイン（https://example.com）

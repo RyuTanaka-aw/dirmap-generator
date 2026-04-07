@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# dirmap-generator
 
-## Getting Started
+Web サイトをクロールし、ディレクトリマップを Excel として出力する Next.js 15 アプリです。
 
-First, run the development server:
+## 開発
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+本番ビルドと起動:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build
+npm start
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 現在の動作
 
-## Learn More
+- クロール開始は `POST /api/crawl-jobs`
+- 進捗確認は `GET /api/crawl-jobs/:id`
+- UI はジョブ作成後にポーリングして状態を表示
+- 完了後にサーバー側で Excel を自動生成し、履歴へ登録
 
-To learn more about Next.js, take a look at the following resources:
+## 永続データ
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+アプリはローカルファイルを使って状態を保存します。単一サーバーへの直接配備を前提にしています。
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `data/exports/`: 生成済み Excel
+- `data/sitemaps.json`: 完了済み履歴一覧
+- `data/jobs/<jobId>/job.json`: ジョブ状態
+- `data/jobs/<jobId>/pages.ndjson`: クロール済みページの中間保存
+- `data/jobs/<jobId>/events.ndjson`: ジョブ診断ログ
+- `data/jobs/active-job.lock`: 単一実行ロック
 
-## Deploy on Vercel
+## 運用メモ
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- v1 は同時実行 1 ジョブのみ
+- サーバー停止で `queued` / `running` が残った場合、次回ジョブ API アクセス時に `failed` へ回収
+- 複数サーバー構成や共有ストレージ前提の運用は未対応

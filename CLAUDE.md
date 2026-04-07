@@ -1,42 +1,54 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to coding agents working in this repository.
 
 ## ビルド・実行コマンド
 
 ```bash
-npm run dev      # 開発サーバー起動（localhost:3000）
-npm run build    # 本番ビルド（standalone出力）
-npm start        # 本番サーバー起動
-npm run lint     # ESLint実行（Next.js core web vitals + TypeScript）
+npm run dev
+npm run build
+npm start
+npm run lint
 ```
 
 テストフレームワークは未導入。
 
 ## アーキテクチャ
 
-Webサイトを再帰的にクロールし、ディレクトリマップデータをExcelファイルとして出力する **Next.js 15（App Router）** のWebツール。UIは全て日本語。
+Next.js 15 App Router ベースのディレクトリマップ生成ツール。UI は日本語。
 
 ### 主要コンポーネント
 
-- **`app/page.tsx`** — シングルページのクライアントコンポーネント。URL入力、クロール設定（深度、除外パターン、Basic認証）、結果のツリー表示、Excel出力を担当。
-- **`lib/crawler.ts`** — クロールエンジン本体。BFS方式の再帰クローラー。URL正規化、同一ドメインフィルタリング、URLパスセグメントによる深度制限、Basic認証のリダイレクト対応、フラットなURLリストからのツリー構造構築を行う。HTMLパースには軽量な`linkedom`を使用。
-- **`app/api/crawl-recursive/route.ts`** — POSTエンドポイント。クロールパラメータ（url, maxDepth, credentials, excludePatterns）を受け取り、`CrawlResult`ツリーを返す。
-- **`app/api/generate-excel-from-crawl/route.ts`** — POSTエンドポイント。`CrawlResult`ツリーからXLSXファイルを生成。ディレクトリパスカラムのオプション付き。シート名は「ディレクトリマップ」。
-- **`app/api/generate-excel/route.ts`** — サンプル用のExcel生成エンドポイント。
+- `app/page.tsx` - クロールジョブ作成と進捗ポーリング UI
+- `app/history/page.tsx` - 完成済み Excel 履歴一覧
+- `app/api/crawl-jobs/route.ts` - ジョブ作成 API
+- `app/api/crawl-jobs/[id]/route.ts` - ジョブ状態取得 API
+- `lib/crawlJobs.ts` - ファイルベースのジョブ永続化、排他ロック、stale job 回収、成果物生成
+- `lib/crawler.ts` - BFS ベースのクロール本体と階層構築
+- `lib/excelGenerator.ts` - `CrawlResult` から Excel を生成
+- `lib/fileManager.ts` - 履歴メタデータと Excel 保存
 
 ### データフロー
 
-1. ユーザーがURL＋オプションを送信 → `POST /api/crawl-recursive`
-2. クローラーがBFSでページを取得（リクエスト間100ms遅延、ページあたり10秒タイムアウト、最大5リダイレクト）
-3. `CrawlResult`ツリー（`{ url, title, depth, children }`）を返却
-4. ユーザーがエクスポートボタンを押下 → `POST /api/generate-excel-from-crawl` にツリーデータを送信
-5. タイムスタンプ付きXLSXファイル（`sitemap_YYYY-MM-DD.xlsx`）を返却
+1. ユーザーが `POST /api/crawl-jobs` を送信
+2. `lib/crawlJobs.ts` が `data/jobs/active-job.lock` を取得してジョブを作成
+3. バックグラウンドでクロールし、各ページを `pages.ndjson` へ追記しながら `job.json` を更新
+4. 完了後に `pages.ndjson` から `CrawlResult` を復元し、Excel を生成して `data/exports/` に保存
+5. 成功した成果物だけ `data/sitemaps.json` に履歴登録
+6. UI は `GET /api/crawl-jobs/:id` をポーリングして状態表示
 
-### 技術スタック
+### 永続データ
 
-- Next.js 15 / React 19 / TypeScript 5
-- Tailwind CSS 4（`@tailwindcss/postcss`経由）
-- `linkedom`（HTMLパース）、`xlsx`（Excel生成）、`robots-parser`（robots.txt解析）
-- パスエイリアス: `@/*` → プロジェクトルート
-- デプロイ先: standalone出力（Deno Deploy）
+- `data/exports/` - 生成済み Excel
+- `data/sitemaps.json` - 履歴メタデータ
+- `data/jobs/<jobId>/job.json` - ジョブ状態
+- `data/jobs/<jobId>/pages.ndjson` - クロール結果の中間保存
+- `data/jobs/<jobId>/events.ndjson` - エラーや回収ログ
+- `data/jobs/active-job.lock` - 単一ジョブ排他ロック
+
+### 運用前提
+
+- 単一サーバーへ直接配備
+- `next start` で単一プロセス常駐
+- v1 は 1 ジョブ排他、途中再開なし
+- サーバー停止後に残った `running` / `queued` ジョブは、次回ジョブ API アクセス時に `failed` へ回収
