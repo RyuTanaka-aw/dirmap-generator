@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import type { CrawlArtifactStatus, CrawlJobDetail, CrawlJobStatus } from '@/lib/types';
 
@@ -65,6 +66,21 @@ function getStatusLabel(status?: CrawlJobStatus): string {
       return '失敗';
     default:
       return '-';
+  }
+}
+
+function getStatusBadgeVariant(status?: CrawlJobStatus): 'secondary' | 'default' | 'success' | 'destructive' {
+  switch (status) {
+    case 'queued':
+      return 'secondary';
+    case 'running':
+      return 'default';
+    case 'completed':
+      return 'success';
+    case 'failed':
+      return 'destructive';
+    default:
+      return 'secondary';
   }
 }
 
@@ -267,13 +283,7 @@ export default function Home() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>クロール設定</CardTitle>
-          <CardDescription>
-            対象URLを指定すると、バックグラウンドジョブとしてクロールを開始します。
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
+        <CardContent className="flex flex-col gap-4 pt-6">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="url">対象URL</Label>
             <Input
@@ -292,6 +302,7 @@ export default function Home() {
               onChange={(event) => setDevDomain(event.target.value)}
               placeholder="http://localhost:3000"
             />
+            <p className="text-xs text-slate-400">実際のクロールはこのURLに対して行い、出力には対象URLを使用します</p>
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -302,46 +313,57 @@ export default function Home() {
               onChange={(event) => setExcludePatterns(event.target.value)}
               placeholder="/admin/, /api/"
             />
+            <p className="text-xs text-slate-400">カンマ区切りでパスを指定します（例: /admin/, /api/）</p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Checkbox id="useAuth" checked={useAuth} onCheckedChange={(checked) => setUseAuth(Boolean(checked))} />
-            <Label htmlFor="useAuth" className="font-medium cursor-pointer">Basic認証が必要</Label>
-          </div>
+          <div className="border-t border-slate-200 pt-4 mt-2 flex flex-col gap-4">
+            <p className="text-sm font-medium text-slate-500">オプション</p>
 
-          {useAuth && (
-            <div className="flex flex-col md:flex-row gap-4 pl-6 bg-gray-50 rounded-lg p-4">
-              <div className="flex flex-col gap-1.5 flex-1">
-                <Label htmlFor="username">ユーザー名</Label>
-                <Input
-                  id="username"
-                  value={username}
-                  onChange={(event) => setUsername(event.target.value)}
-                  placeholder="username"
-                />
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center gap-2">
+                <Checkbox id="useAuth" checked={useAuth} onCheckedChange={(checked) => setUseAuth(Boolean(checked))} />
+                <Label htmlFor="useAuth" className="font-medium cursor-pointer">Basic認証が必要</Label>
               </div>
-              <div className="flex flex-col gap-1.5 flex-1">
-                <Label htmlFor="password">パスワード</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  placeholder="password"
-                />
-              </div>
+              <p className="text-xs text-slate-400 pl-6">クロール対象サイトにBasic認証が設定されている場合にチェック</p>
             </div>
-          )}
 
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="includeDir"
-              checked={includeDirectoryColumns}
-              onCheckedChange={(checked) => setIncludeDirectoryColumns(Boolean(checked))}
-            />
-            <Label htmlFor="includeDir" className="font-medium cursor-pointer">
-              ディレクトリパス列を追加
-            </Label>
+            {useAuth && (
+              <div className="flex flex-col md:flex-row gap-4 pl-6 bg-gray-50 rounded-lg p-4">
+                <div className="flex flex-col gap-1.5 flex-1">
+                  <Label htmlFor="username">ユーザー名</Label>
+                  <Input
+                    id="username"
+                    value={username}
+                    onChange={(event) => setUsername(event.target.value)}
+                    placeholder="username"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5 flex-1">
+                  <Label htmlFor="password">パスワード</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="password"
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="includeDir"
+                  checked={includeDirectoryColumns}
+                  onCheckedChange={(checked) => setIncludeDirectoryColumns(Boolean(checked))}
+                />
+                <Label htmlFor="includeDir" className="font-medium cursor-pointer">
+                  ディレクトリパス列を追加
+                </Label>
+              </div>
+              <p className="text-xs text-slate-400 pl-6">Excelにディレクトリ階層ごとのパス列を追加します</p>
+            </div>
           </div>
         </CardContent>
         <CardFooter>
@@ -381,11 +403,13 @@ export default function Home() {
           <CardContent className="flex flex-col gap-3">
             <div className="flex items-center justify-between text-sm gap-4">
               <span className="text-slate-500">対象URL</span>
-              <span className="font-medium text-slate-900 break-all text-right max-w-[70%]">{job.requestedUrl}</span>
+              <span className="font-medium text-slate-900 text-right max-w-[70%] truncate" title={job.requestedUrl}>{job.requestedUrl}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-slate-500">状態</span>
-              <span className="font-medium text-slate-900">{getStatusLabel(job.status)}</span>
+              <Badge variant={getStatusBadgeVariant(job.status)} className={job.status === 'running' ? 'animate-pulse' : ''}>
+                {getStatusLabel(job.status)}
+              </Badge>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-slate-500">成果物</span>
@@ -395,13 +419,21 @@ export default function Home() {
               <span className="text-slate-500">進捗率</span>
               <span className="font-medium text-primary-500">{job.progressPercent}%</span>
             </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-primary-500 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${job.progressPercent}%` }}
+              />
+            </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-slate-500">訪問済みページ数</span>
               <span className="font-medium text-slate-900">{job.visitedCount}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-slate-500">キュー残数</span>
-              <span className="font-medium text-slate-900">{job.queuedCount}</span>
+              <span className="font-medium text-slate-900">
+                {job.status === 'completed' || job.status === 'failed' ? '—' : job.queuedCount}
+              </span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-slate-500">失敗数</span>
@@ -409,7 +441,7 @@ export default function Home() {
             </div>
             <div className="flex items-center justify-between text-sm gap-4">
               <span className="text-slate-500">処理中 / 最終URL</span>
-              <span className="font-medium text-slate-900 break-all text-right max-w-[70%]">{job.lastProcessedUrl || '-'}</span>
+              <span className="font-medium text-slate-900 text-right max-w-[70%] truncate" title={job.lastProcessedUrl || undefined}>{job.lastProcessedUrl || '-'}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-slate-500">完了時刻</span>
@@ -428,7 +460,7 @@ export default function Home() {
               </Alert>
             )}
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex flex-col gap-2">
             <Button
               className="w-full"
               onClick={handleExportToExcel}
@@ -436,6 +468,9 @@ export default function Home() {
             >
               Excelファイルをダウンロード
             </Button>
+            {(job.status !== 'completed' || job.artifactStatus !== 'ready' || !job.resultFileName) && (
+              <p className="text-xs text-slate-400 text-center">クロール完了後にダウンロードできます</p>
+            )}
           </CardFooter>
         </Card>
       )}

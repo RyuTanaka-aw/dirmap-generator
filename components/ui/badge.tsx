@@ -12,6 +12,7 @@ const badgeVariants = cva(
         default: "bg-primary-50 text-primary-500",
         secondary: "bg-slate-100 text-slate-700",
         destructive: "bg-red-50 text-red-700",
+        success: "bg-green-50 text-green-700",
         outline: "border border-slate-200 text-slate-700",
         ghost: "text-slate-500",
         link: "text-primary-500 underline-offset-4 hover:underline",
