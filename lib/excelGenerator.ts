@@ -12,6 +12,7 @@ interface FlatData {
   title: string;
   description: string;
   directoryName: string;
+  isSynthetic?: boolean;
 }
 
 export interface ExcelGenerationOptions {
@@ -116,7 +117,8 @@ function flattenCrawlResult(
       url: result.url,
       title: result.title,
       description: result.description || '',
-      directoryName: getDirectorySegmentName(result.url)
+      directoryName: getDirectorySegmentName(result.url),
+      isSynthetic: result.isSynthetic
     };
 
     // 開発ドメインが指定されている場合、開発URLを生成
@@ -166,6 +168,7 @@ export async function generateExcelFromCrawlResult(
   if (devDomain) {
     headers.push('開発URL');
   }
+  headers.push('タイトル');
   headers.push('ディスクリプション');
   headers.push('備考'); // 備考列（ディスクリプションのはみ出し防止も兼ねる）
 
@@ -185,10 +188,11 @@ export async function generateExcelFromCrawlResult(
       }
     }
 
-    row.push(data.url);
+    row.push(data.isSynthetic ? null : data.url);
     if (devDomain) {
-      row.push(data.devUrl || null);
+      row.push(data.isSynthetic ? null : (data.devUrl || null));
     }
+    row.push(data.isSynthetic ? null : data.title);
     row.push(data.description);
     row.push(null); // 備考列（初期値は空）
     return row;
@@ -246,6 +250,7 @@ export async function generateExcelFromCrawlResult(
   if (devDomain) {
     colWidths.push({ wch: 50 }); // 開発URL列
   }
+  colWidths.push({ wch: 30 }); // タイトル列
   colWidths.push({ wch: 60 }); // ディスクリプション列
   colWidths.push({ wch: 20 }); // 備考列
   // システム表記列がヘッダー列数を超える場合、追加の列幅を設定

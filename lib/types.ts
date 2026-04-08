@@ -7,6 +7,7 @@ export interface CrawlResult {
   devUrl?: string;
   notes?: string;
   completed_at?: string;
+  isSynthetic?: boolean;
 }
 
 export interface CrawlRequest {

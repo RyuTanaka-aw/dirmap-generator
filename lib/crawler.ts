@@ -545,7 +545,8 @@ export function buildHierarchy(
           title: dirName,
           description: '',
           depth,
-          children: []
+          children: [],
+          isSynthetic: true
         });
         existingUrls.add(intermediateUrl);
         syntheticUrls.push(intermediateUrl);
