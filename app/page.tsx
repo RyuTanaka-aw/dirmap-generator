@@ -168,7 +168,9 @@ export default function Home() {
         setJob(payload as CrawlJobDetail);
         setError('');
 
-        if (payload.status === 'completed' || payload.status === 'failed') {
+        const isTerminal = (payload.status === 'completed' || payload.status === 'failed')
+          && payload.artifactStatus !== 'pending';
+        if (isTerminal) {
           window.localStorage.removeItem(ACTIVE_JOB_STORAGE_KEY);
           cancelled = true;
         }
