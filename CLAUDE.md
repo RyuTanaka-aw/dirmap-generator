@@ -52,3 +52,51 @@ Next.js 15 App Router ベースのディレクトリマップ生成ツール。U
 - `next start` で単一プロセス常駐
 - v1 は 1 ジョブ排他、途中再開なし
 - サーバー停止後に残った `running` / `queued` ジョブは、次回ジョブ API アクセス時に `failed` へ回収
+
+### デザインガイドライン
+
+**スタイリング基盤**
+
+- Tailwind CSS v4 + CVA（class-variance-authority）を使用
+- カスタムトークンは `app/globals.css` の `@theme` ディレクティブで定義（`tailwind.config` は存在しない）
+
+**カラートークン**
+
+| トークン | 用途 |
+|---|---|
+| `primary-50`〜`primary-950` | ブランドカラースケール（メイン: `primary-500 = #2b70ef`） |
+| `body` (`#3d4b5f`) | 本文テキスト色（`text-body` で使用） |
+| `slate-*` | ラベル・サブテキスト・ボーダー |
+| `gray-*` | 背景・ホバー面 |
+
+ブランドカラー以外に独自カラーを追加する場合は `app/globals.css` の `@theme` に追記する。
+
+**フォント**
+
+Inter（`next/font/google`）をメインフォントとし、`Hiragino Sans` / `Noto Sans JP` を日本語フォールバックとして設定済み。
+
+**UIコンポーネント**
+
+`components/ui/` に shadcn/ui ベースのコンポーネントを CVA でカスタマイズして配置している。
+
+| コンポーネント | バリアント定義箇所 |
+|---|---|
+| Button | `variant` × `size` の2軸 CVA |
+| Badge | `variant`（default / secondary / destructive / success / outline / ghost / link） |
+| Alert | `variant`（default / destructive） |
+| Card | バリアントなし（構造スロットのみ） |
+| Input / Checkbox / Label / Table | バリアントなし |
+
+新規コンポーネントを追加する場合は `components/ui/` に同パターンで追加し、`primary-*` / `slate-*` トークンを使用すること。
+
+**レイアウト構造**
+
+```
+AppLayout (components/AppLayout.tsx)
+├── Sidebar (components/Sidebar.tsx)  ← w-64, 固定
+└── <main>  ← lg:ml-64 でオフセット
+    └── {children}  ← px-6 py-8 md:px-8 md:py-10
+```
+
+- デスクトップ（`lg` 以上）: 固定サイドバー + メインコンテンツ並列
+- モバイル: ハンバーガーメニュー + ドロワー方式（`z-50`）
