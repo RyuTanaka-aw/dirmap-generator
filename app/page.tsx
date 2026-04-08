@@ -172,13 +172,8 @@ export default function Home() {
           window.localStorage.removeItem(ACTIVE_JOB_STORAGE_KEY);
           cancelled = true;
         }
-      } catch (pollError) {
-        if (cancelled) {
-          return;
-        }
-
-        const message = pollError instanceof Error ? pollError.message : 'ジョブ状態の取得に失敗しました';
-        setError(message);
+      } catch {
+        // ポーリング中の一時的なエラーは無視（ジョブ失敗時は job.error で表示される）
       }
     };
 
@@ -302,7 +297,7 @@ export default function Home() {
               onChange={(event) => setDevDomain(event.target.value)}
               placeholder="http://localhost:3000"
             />
-            <p className="text-xs text-slate-400">実際のクロールはこのURLに対して行い、出力には対象URLを使用します</p>
+            <p className="text-xs text-slate-400">対象URLが本番環境の場合、開発環境のURLを指定すると出力にドメインを置換したURLも並べて表示します</p>
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -383,6 +378,15 @@ export default function Home() {
           <AlertTitle>エラー</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
+      )}
+
+      {!job && jobId && !error && (
+        <Card>
+          <CardContent className="flex items-center gap-3 py-6">
+            <Loader2 className="w-5 h-5 animate-spin text-primary-500" />
+            <span className="text-sm text-slate-500">ジョブを読み込み中...</span>
+          </CardContent>
+        </Card>
       )}
 
       {job && (
