@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Map, History, X } from 'lucide-react';
+import { Map, History, BookOpen, X } from 'lucide-react';
 
 interface SidebarProps {
   mobileOpen: boolean;
@@ -13,15 +13,20 @@ interface SidebarProps {
 const navItems = [
   { href: '/', label: 'クロール設定', icon: Map },
   { href: '/history', label: '履歴', icon: History },
+  { href: '/docs', label: '使い方', icon: BookOpen },
 ];
 
 function NavList({ onItemClick }: { onItemClick?: () => void }) {
   const pathname = usePathname();
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
   return (
     <nav aria-label="メインナビゲーション" className="flex flex-col gap-1 px-3">
       {navItems.map(({ href, label, icon: Icon }) => {
-        const isActive = pathname === href;
+        const isActive =
+          href === '/'
+            ? pathname === '/' || pathname === basePath + '/'
+            : pathname.startsWith(basePath + href) || pathname.startsWith(href);
         return (
           <Link
             key={href}

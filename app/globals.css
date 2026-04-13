@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@plugin "@tailwindcss/typography";
 
 @theme {
   --color-primary-50: #f0f5ff;
@@ -20,5 +21,24 @@
 @layer base {
   body {
     @apply bg-gray-50 text-body antialiased;
+  }
+}
+
+@layer components {
+  .docs-prose {
+    @apply prose prose-slate max-w-none;
+    --tw-prose-headings: theme(colors.slate.900);
+    --tw-prose-links: theme(colors.primary.500);
+    --tw-prose-counters: theme(colors.slate.500);
+    --tw-prose-bullets: theme(colors.slate.400);
+  }
+  .docs-prose h1 {
+    @apply text-2xl font-bold;
+  }
+  .docs-prose h2 {
+    @apply text-xl font-semibold border-b border-slate-200 pb-2 mt-10;
+  }
+  .docs-prose h3 {
+    @apply text-base font-semibold mt-8;
   }
 }
