@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import createMDX from "@next/mdx";
+import rehypeSlug from "rehype-slug";
 
 const nextConfig: NextConfig = {
   output: 'standalone',
@@ -10,6 +11,10 @@ const nextConfig: NextConfig = {
   pageExtensions: ['ts', 'tsx', 'mdx'],
 };
 
-const withMDX = createMDX({});
+const withMDX = createMDX({
+  options: {
+    rehypePlugins: [rehypeSlug],
+  },
+});
 
 export default withMDX(nextConfig);

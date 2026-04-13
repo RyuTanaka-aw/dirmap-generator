@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CircleCheck, Loader2, AlertCircle } from 'lucide-react';
+import { CircleCheck, Loader2, AlertCircle, CircleHelp } from 'lucide-react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -292,25 +293,33 @@ export default function Home() {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="devDomain">開発環境URL</Label>
+            <div className="flex items-center gap-1">
+              <Label htmlFor="devDomain">開発環境URL</Label>
+              <Link href="/docs/options#開発環境url" target="_blank" rel="noopener noreferrer">
+                <CircleHelp className="h-3.5 w-3.5 text-slate-400 hover:text-primary-500" />
+              </Link>
+            </div>
             <Input
               id="devDomain"
               value={devDomain}
               onChange={(event) => setDevDomain(event.target.value)}
               placeholder="http://localhost:3000"
             />
-            <p className="text-xs text-slate-400">対象URLが本番環境の場合、開発環境のURLを指定すると出力にドメインを置換したURLも並べて表示します</p>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="excludePatterns">除外パターン</Label>
+            <div className="flex items-center gap-1">
+              <Label htmlFor="excludePatterns">除外パターン</Label>
+              <Link href="/docs/options#除外パターン" target="_blank" rel="noopener noreferrer">
+                <CircleHelp className="h-3.5 w-3.5 text-slate-400 hover:text-primary-500" />
+              </Link>
+            </div>
             <Input
               id="excludePatterns"
               value={excludePatterns}
               onChange={(event) => setExcludePatterns(event.target.value)}
               placeholder="/admin/, /api/"
             />
-            <p className="text-xs text-slate-400">カンマ区切りでパスを指定します（例: /admin/, /api/）</p>
           </div>
 
           <div className="border-t border-slate-200 pt-4 mt-2 flex flex-col gap-4">
@@ -320,8 +329,10 @@ export default function Home() {
               <div className="flex items-center gap-2">
                 <Checkbox id="useAuth" checked={useAuth} onCheckedChange={(checked) => setUseAuth(Boolean(checked))} />
                 <Label htmlFor="useAuth" className="font-medium cursor-pointer">Basic認証が必要</Label>
+                <Link href="/docs/options#basic認証" target="_blank" rel="noopener noreferrer">
+                  <CircleHelp className="h-3.5 w-3.5 text-slate-400 hover:text-primary-500" />
+                </Link>
               </div>
-              <p className="text-xs text-slate-400 pl-6">クロール対象サイトにBasic認証が設定されている場合にチェック</p>
             </div>
 
             {useAuth && (
@@ -358,8 +369,10 @@ export default function Home() {
                 <Label htmlFor="includeDir" className="font-medium cursor-pointer">
                   ディレクトリパス列を追加
                 </Label>
+                <Link href="/docs/options#ディレクトリパス列を追加" target="_blank" rel="noopener noreferrer">
+                  <CircleHelp className="h-3.5 w-3.5 text-slate-400 hover:text-primary-500" />
+                </Link>
               </div>
-              <p className="text-xs text-slate-400 pl-6">Excelにディレクトリ階層ごとのパス列を追加します</p>
             </div>
           </div>
         </CardContent>
