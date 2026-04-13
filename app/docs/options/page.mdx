@@ -6,11 +6,11 @@
 
 本番URLのドメイン部分を開発環境のドメインに置き換えた「開発URL」列をExcelに追加します。
 
-**使いどころ**: コーダーに開発環境のリンク一覧を渡したいとき、本番と開発でパス構造が同じ場合に便利です。
+**よくある用途**: コーダーに開発環境のリンク一覧を渡したいとき、本番と開発でパス構造が同じ場合に便利です。
 
-**入力例**: `http://localhost:3000` や `https://staging.example.com`
+**入力例**: `https://dev.test.com/`
 
-本番URL `https://example.com/about/` に対して、開発URL `http://localhost:3000/about/` が自動生成されます。
+<ExcelPreview showDevUrl="https://dev.test.com" />
 
 ---
 
@@ -44,9 +44,6 @@ ONにすると、各階層のディレクトリ名（パスセグメント）だ
 
 **出力例**:
 
-| 第2階層 | directory |
-|---------|-----------|
-| 会社概要 | about/ |
-| 製品一覧 | products/ |
+<ExcelPreview showDirectoryPath />
 
 コーディング時にディレクトリ構成を把握したいケースや、ファイルサーバーのフォルダ構成と照合する際に便利です。

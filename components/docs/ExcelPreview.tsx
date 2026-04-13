@@ -7,7 +7,13 @@ interface PageData {
   url?: string;
   pageTitle?: string;
   description?: string;
+  directoryName?: string;
   isSynthetic?: boolean;
+}
+
+interface ExcelPreviewProps {
+  showDevUrl?: string;
+  showDirectoryPath?: boolean;
 }
 
 // サンプルデータ（実際のツール出力に近い内容）
@@ -16,64 +22,79 @@ const sampleData: PageData[] = [
     no: 1,
     level: 0,
     title: "テスト株式会社",
-    url: "https://test-company.example.com/",
+    url: "https://test.com/",
     pageTitle: "テスト株式会社",
     description: "テスト株式会社の公式サイトです",
+    directoryName: "",
   },
   {
     no: 2,
     level: 1,
     title: "会社概要",
-    url: "https://test-company.example.com/about/",
+    url: "https://test.com/about/",
     pageTitle: "会社概要",
     description: "私たちについて",
+    directoryName: "about/",
   },
   {
     no: 3,
     level: 1,
     title: "products",
     isSynthetic: true,
+    directoryName: "products/",
   },
   {
     no: 4,
     level: 2,
-    title: "製品A",
-    url: "https://test-company.example.com/products/a/",
-    pageTitle: "製品A",
-    description: "高性能な製品Aの紹介ページです",
+    title: "ラインナップ",
+    url: "https://test.com/products/lineup.html",
+    pageTitle: "製品ラインナップ",
+    description: "全製品の一覧です",
+    directoryName: "lineup.html",
   },
   {
     no: 5,
     level: 2,
-    title: "製品B",
-    url: "https://test-company.example.com/products/b/",
-    pageTitle: "製品B",
-    description: "コスパ抜群の製品Bの詳細",
+    title: "比較・価格",
+    url: "https://test.com/products/compare.html",
+    pageTitle: "製品比較・価格表",
+    description: "プランの比較と料金をご確認いただけます",
+    directoryName: "compare.html",
   },
   {
     no: 6,
     level: 1,
     title: "お問い合わせ",
-    url: "https://test-company.example.com/contact/",
+    url: "https://test.com/contact/",
     pageTitle: "お問い合わせ",
     description: "お気軽にご連絡ください",
+    directoryName: "contact/",
   },
 ];
 
 const maxLevel = 2; // サンプルデータの最大階層
 
-const headers = [
-  "No",
-  "トップ",
-  "第2階層",
-  "第3階層",
-  "URL",
-  "タイトル",
-  "ディスクリプション",
-  "備考",
-];
+function generateDevUrl(prodUrl: string, devDomain: string): string {
+  try {
+    const prodUrlObj = new URL(prodUrl);
+    const devDomainObj = new URL(devDomain);
+    return devDomainObj.origin + prodUrlObj.pathname + prodUrlObj.search + prodUrlObj.hash;
+  } catch {
+    return prodUrl;
+  }
+}
 
-export function ExcelPreview() {
+export function ExcelPreview({ showDevUrl, showDirectoryPath }: ExcelPreviewProps = {}) {
+  const headers: string[] = ["No", "トップ", "第2階層", "第3階層"];
+  if (showDirectoryPath) {
+    headers.push("directory", "");
+  }
+  headers.push("URL");
+  if (showDevUrl) {
+    headers.push("開発URL");
+  }
+  headers.push("タイトル", "ディスクリプション", "備考");
+
   return (
     <div className="my-8 not-prose">
       {/* タイトル・日時行 */}
@@ -91,13 +112,13 @@ export function ExcelPreview() {
 
       {/* メインテーブル */}
       <div className="overflow-x-auto border border-t-0 border-slate-200 rounded-b-lg">
-        <table className="w-full text-sm border-collapse min-w-[1100px]">
+        <table className="w-full text-sm border-collapse min-w-[1600px]">
           <thead>
             <tr className="bg-slate-50">
-              {headers.map((header) => (
+              {headers.map((header, i) => (
                 <th
-                  key={header}
-                  className="px-3 py-2 text-xs font-medium text-slate-500 text-center border-b border-slate-200 whitespace-nowrap"
+                  key={i}
+                  className="px-3 py-2 text-xs font-medium text-slate-500 text-center border-b border-slate-200 whitespace-nowrap min-w-[140px] first:min-w-[48px] last:min-w-[80px]"
                 >
                   {header}
                 </th>
@@ -108,11 +129,7 @@ export function ExcelPreview() {
             {sampleData.map((row) => (
               <tr
                 key={row.no}
-                className={
-                  row.isSynthetic
-                    ? "bg-amber-50/50"
-                    : "bg-white hover:bg-slate-50/50"
-                }
+                className="bg-white hover:bg-slate-50/50"
               >
                 {/* No */}
                 <td className="px-3 py-2 text-center text-slate-400 border-b border-slate-100 w-10">
@@ -147,6 +164,21 @@ export function ExcelPreview() {
                   </td>
                 ))}
 
+                {/* ディレクトリパス列（オプション）: 第2階層・第3階層のみ */}
+                {showDirectoryPath &&
+                  Array.from({ length: maxLevel }, (_, i) => (
+                    <td
+                      key={`dir-${i}`}
+                      className="px-3 py-2 border-b border-slate-100 bg-amber-50/70"
+                    >
+                      {i + 1 === row.level ? (
+                        <span className="text-xs text-slate-500 font-mono">
+                          {row.directoryName}
+                        </span>
+                      ) : null}
+                    </td>
+                  ))}
+
                 {/* URL */}
                 <td className="px-3 py-2 border-b border-slate-100">
                   {row.url && (
@@ -155,6 +187,17 @@ export function ExcelPreview() {
                     </span>
                   )}
                 </td>
+
+                {/* 開発URL（オプション） */}
+                {showDevUrl && (
+                  <td className="px-3 py-2 border-b border-slate-100 bg-amber-50/70">
+                    {row.url && !row.isSynthetic && (
+                      <span className="text-xs text-primary-500 whitespace-nowrap">
+                        {generateDevUrl(row.url, showDevUrl)}
+                      </span>
+                    )}
+                  </td>
+                )}
 
                 {/* タイトル */}
                 <td className="px-3 py-2 border-b border-slate-100">
