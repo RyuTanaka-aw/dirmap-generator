@@ -282,7 +282,7 @@ export default function Home() {
       <Card>
         <CardContent className="flex flex-col gap-4 pt-6">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="url">対象URL</Label>
+            <Label htmlFor="url">対象URL<span className="text-red-500 ml-0.5">*</span></Label>
             <Input
               id="url"
               value={url}
@@ -292,7 +292,7 @@ export default function Home() {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="devDomain">開発環境URL（任意）</Label>
+            <Label htmlFor="devDomain">開発環境URL</Label>
             <Input
               id="devDomain"
               value={devDomain}
@@ -303,7 +303,7 @@ export default function Home() {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="excludePatterns">除外パターン（任意）</Label>
+            <Label htmlFor="excludePatterns">除外パターン</Label>
             <Input
               id="excludePatterns"
               value={excludePatterns}
