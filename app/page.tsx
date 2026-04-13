@@ -12,6 +12,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import type { CrawlArtifactStatus, CrawlJobDetail, CrawlJobStatus } from '@/lib/types';
+import { validateCrawlForm, hasErrors, type CrawlFormErrors } from '@/lib/validation';
 
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
 const ACTIVE_JOB_STORAGE_KEY = 'dirmap-active-job-id';
@@ -106,6 +107,7 @@ export default function Home() {
   const [useAuth, setUseAuth] = useState(false);
   const [excludePatterns, setExcludePatterns] = useState('');
   const [includeDirectoryColumns, setIncludeDirectoryColumns] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<CrawlFormErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
@@ -193,6 +195,11 @@ export default function Home() {
       window.clearInterval(intervalId);
     };
   }, [jobId]);
+
+  const validateField = (field: keyof CrawlFormErrors) => {
+    const errors = validateCrawlForm({ url, devDomain, excludePatterns, useAuth, username, password });
+    setFieldErrors((prev) => ({ ...prev, [field]: errors[field] }));
+  };
 
   const handleConfirmCrawl = () => {
     setShowConfirmDialog(false);
@@ -287,9 +294,15 @@ export default function Home() {
             <Input
               id="url"
               value={url}
-              onChange={(event) => setUrl(event.target.value)}
+              onChange={(event) => {
+                setUrl(event.target.value);
+                setFieldErrors((prev) => ({ ...prev, url: undefined }));
+              }}
+              onBlur={() => validateField('url')}
               placeholder="https://example.com"
+              className={fieldErrors.url ? 'border-red-500 focus-visible:ring-red-500/50' : ''}
             />
+            {fieldErrors.url && <p className="text-sm text-red-500">{fieldErrors.url}</p>}
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -302,9 +315,15 @@ export default function Home() {
             <Input
               id="devDomain"
               value={devDomain}
-              onChange={(event) => setDevDomain(event.target.value)}
-              placeholder="http://localhost:3000"
+              onChange={(event) => {
+                setDevDomain(event.target.value);
+                setFieldErrors((prev) => ({ ...prev, devDomain: undefined }));
+              }}
+              onBlur={() => validateField('devDomain')}
+              placeholder="https://dev.example.com"
+              className={fieldErrors.devDomain ? 'border-red-500 focus-visible:ring-red-500/50' : ''}
             />
+            {fieldErrors.devDomain && <p className="text-sm text-red-500">{fieldErrors.devDomain}</p>}
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -317,9 +336,15 @@ export default function Home() {
             <Input
               id="excludePatterns"
               value={excludePatterns}
-              onChange={(event) => setExcludePatterns(event.target.value)}
+              onChange={(event) => {
+                setExcludePatterns(event.target.value);
+                setFieldErrors((prev) => ({ ...prev, excludePatterns: undefined }));
+              }}
+              onBlur={() => validateField('excludePatterns')}
               placeholder="/admin/, /api/"
+              className={fieldErrors.excludePatterns ? 'border-red-500 focus-visible:ring-red-500/50' : ''}
             />
+            {fieldErrors.excludePatterns && <p className="text-sm text-red-500">{fieldErrors.excludePatterns}</p>}
           </div>
 
           <div className="border-t border-slate-200 pt-4 mt-2 flex flex-col gap-4">
@@ -327,7 +352,12 @@ export default function Home() {
 
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center gap-2">
-                <Checkbox id="useAuth" checked={useAuth} onCheckedChange={(checked) => setUseAuth(Boolean(checked))} />
+                <Checkbox id="useAuth" checked={useAuth} onCheckedChange={(checked) => {
+                  setUseAuth(Boolean(checked));
+                  if (!checked) {
+                    setFieldErrors((prev) => ({ ...prev, username: undefined, password: undefined }));
+                  }
+                }} />
                 <Label htmlFor="useAuth" className="font-medium cursor-pointer">Basic認証が必要</Label>
                 <Link href="/docs/options#basic認証" target="_blank" rel="noopener noreferrer">
                   <CircleHelp className="h-3.5 w-3.5 text-slate-400 hover:text-primary-500" />
@@ -342,9 +372,15 @@ export default function Home() {
                   <Input
                     id="username"
                     value={username}
-                    onChange={(event) => setUsername(event.target.value)}
+                    onChange={(event) => {
+                      setUsername(event.target.value);
+                      setFieldErrors((prev) => ({ ...prev, username: undefined }));
+                    }}
+                    onBlur={() => validateField('username')}
                     placeholder="username"
+                    className={fieldErrors.username ? 'border-red-500 focus-visible:ring-red-500/50' : ''}
                   />
+                  {fieldErrors.username && <p className="text-sm text-red-500">{fieldErrors.username}</p>}
                 </div>
                 <div className="flex flex-col gap-1.5 flex-1">
                   <Label htmlFor="password">パスワード</Label>
@@ -352,9 +388,15 @@ export default function Home() {
                     id="password"
                     type="password"
                     value={password}
-                    onChange={(event) => setPassword(event.target.value)}
+                    onChange={(event) => {
+                      setPassword(event.target.value);
+                      setFieldErrors((prev) => ({ ...prev, password: undefined }));
+                    }}
+                    onBlur={() => validateField('password')}
                     placeholder="password"
+                    className={fieldErrors.password ? 'border-red-500 focus-visible:ring-red-500/50' : ''}
                   />
+                  {fieldErrors.password && <p className="text-sm text-red-500">{fieldErrors.password}</p>}
                 </div>
               </div>
             )}
@@ -379,8 +421,16 @@ export default function Home() {
         <CardFooter>
           <Button
             className="w-full"
-            onClick={() => setShowConfirmDialog(true)}
-            disabled={submitting || isOpenJob(job) || !url}
+            onClick={() => {
+              const errors = validateCrawlForm({ url, devDomain, excludePatterns, useAuth, username, password });
+              if (hasErrors(errors)) {
+                setFieldErrors(errors);
+                return;
+              }
+              setFieldErrors({});
+              setShowConfirmDialog(true);
+            }}
+            disabled={submitting || isOpenJob(job)}
           >
             {submitting ? 'ジョブ作成中...' : 'クロール開始'}
           </Button>
