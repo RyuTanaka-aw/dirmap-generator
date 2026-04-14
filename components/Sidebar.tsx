@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Map, History, BookOpen, X } from 'lucide-react';
+import { Map, History, BookOpen, MessageSquareText, X } from 'lucide-react';
 
 interface SidebarProps {
   mobileOpen: boolean;
@@ -14,6 +14,7 @@ const navItems = [
   { href: '/', label: 'クロール設定', icon: Map },
   { href: '/history', label: '履歴', icon: History },
   { href: '/docs', label: '使い方', icon: BookOpen },
+  { href: '/feedback', label: 'ご意見箱', icon: MessageSquareText },
 ];
 
 function NavList({ onItemClick }: { onItemClick?: () => void }) {

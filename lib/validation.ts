@@ -77,3 +77,16 @@ export function validateCrawlForm(values: CrawlFormValues): CrawlFormErrors {
 export function hasErrors(errors: CrawlFormErrors): boolean {
   return Object.keys(errors).length > 0;
 }
+
+export function validateFeedbackMessage(message: unknown): string | undefined {
+  if (typeof message !== 'string') {
+    return 'メッセージが不正です';
+  }
+  if (!message.trim()) {
+    return 'メッセージを入力してください';
+  }
+  if (message.length > 2000) {
+    return 'メッセージは2000文字以内で入力してください';
+  }
+  return undefined;
+}

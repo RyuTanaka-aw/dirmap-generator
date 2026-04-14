@@ -60,3 +60,14 @@ export interface SitemapsData {
   version: string;
   sitemaps: SitemapMetadata[];
 }
+
+export interface FeedbackEntry {
+  id: string;
+  message: string;
+  createdAt: string;
+}
+
+export interface FeedbackData {
+  version: string;
+  feedbacks: FeedbackEntry[];
+}
