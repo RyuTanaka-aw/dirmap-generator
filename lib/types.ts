@@ -17,6 +17,7 @@ export interface CrawlRequest {
   excludePatterns?: string[];
   includeDirectoryColumns?: boolean;
   devDomain?: string;
+  maxPages?: number;
 }
 
 export type CrawlJobStatus = 'queued' | 'running' | 'completed' | 'failed';

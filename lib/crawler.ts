@@ -26,6 +26,7 @@ export interface CrawlOptions {
   username?: string;
   password?: string;
   excludePatterns?: string[];
+  maxPages?: number;
 }
 
 export interface PageInfo {
@@ -300,7 +301,8 @@ export async function crawlSiteFlat(
   const {
     username,
     password,
-    excludePatterns = []
+    excludePatterns = [],
+    maxPages = MAX_PAGES
   } = options;
 
   const { collectPages = true } = executionOptions;
@@ -319,8 +321,8 @@ export async function crawlSiteFlat(
     }
 
     // ページ数制限チェック
-    if (visited.size >= MAX_PAGES) {
-      console.warn(`最大ページ数 (${MAX_PAGES}) に到達しました。クロールを停止します。`);
+    if (visited.size >= maxPages) {
+      console.warn(`最大ページ数 (${maxPages}) に到達しました。クロールを停止します。`);
       break;
     }
 

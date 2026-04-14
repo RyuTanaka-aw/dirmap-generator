@@ -27,7 +27,8 @@ export async function POST(request: Request) {
       password: body.password,
       excludePatterns: Array.isArray(body.excludePatterns) ? body.excludePatterns : [],
       includeDirectoryColumns: Boolean(body.includeDirectoryColumns),
-      devDomain: body.devDomain
+      devDomain: body.devDomain,
+      maxPages: typeof body.maxPages === 'number' ? body.maxPages : undefined
     });
 
     return NextResponse.json(

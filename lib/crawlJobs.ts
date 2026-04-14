@@ -266,7 +266,8 @@ async function runJob(jobId: string): Promise<void> {
         url: job.options.url,
         username: job.options.username,
         password: job.options.password,
-        excludePatterns: job.options.excludePatterns
+        excludePatterns: job.options.excludePatterns,
+        maxPages: job.options.maxPages
       },
       {
         collectPages: false,
@@ -374,7 +375,8 @@ export async function createCrawlJob(options: CrawlRequest): Promise<CrawlJobDet
         password: options.password,
         excludePatterns: options.excludePatterns ?? [],
         includeDirectoryColumns: options.includeDirectoryColumns ?? false,
-        devDomain: options.devDomain
+        devDomain: options.devDomain,
+        maxPages: options.maxPages
       }
     };
 
