@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CircleCheck, Loader2, AlertCircle, CircleHelp } from 'lucide-react';
+import { CircleCheck, Loader2, AlertCircle, CircleHelp, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -284,8 +284,14 @@ export default function Home() {
     <div className="max-w-[640px] mx-auto flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">クロール設定</h1>
-        <p className="text-sm text-slate-500 mt-1">対象URLを指定してディレクトリマップを生成します</p>
       </div>
+
+      <Alert>
+        <BookOpen className="h-4 w-4" />
+        <AlertDescription>
+          初めての方は<Link href="/docs" target="_blank" rel="noopener noreferrer" className="underline font-medium hover:text-primary-600">使い方ガイド</Link>をご覧ください。設定項目の詳細は<Link href="/docs/options" target="_blank" rel="noopener noreferrer" className="underline font-medium hover:text-primary-600">詳細オプション</Link>で確認できます。
+        </AlertDescription>
+      </Alert>
 
       <Card>
         <CardContent className="flex flex-col gap-4 pt-6">
